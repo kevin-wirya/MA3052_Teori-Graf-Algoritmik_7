@@ -3,17 +3,17 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
 
-public class DFSVisualizer extends JFrame {
+public class BFSVisual extends JFrame {
     private GraphPanel graphPanel;
     
-    public DFSVisualizer(ArrayList<ArrayList<Integer>> adj, int startVertex, ArrayList<Integer> traversalResult) {
-        setTitle("Visualisasi DFS - Depth First Search");
+    public BFSVisual(ArrayList<ArrayList<Integer>> adj, int startVertex, ArrayList<Integer> traversalResult, ArrayList<ArrayList<Integer>> levels) {
+        setTitle("Visualisasi BFS - Breadth First Search (Level by Level)");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1000, 700);
         setLocationRelativeTo(null);
         setResizable(true);
         
-        graphPanel = new GraphPanel(adj, startVertex, traversalResult);
+        graphPanel = new GraphPanel(adj, startVertex, traversalResult, levels);
         add(graphPanel);
         
         JPanel controlPanel = new JPanel();
@@ -26,7 +26,7 @@ public class DFSVisualizer extends JFrame {
         infoLabel.setFont(new Font("Arial", Font.PLAIN, 12));
         infoLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         
-        JLabel traversalLabel = new JLabel("DFS Traversal Order: " + traversalResult.toString());
+        JLabel traversalLabel = new JLabel("BFS Traversal Order: " + traversalResult.toString());
         traversalLabel.setForeground(Color.YELLOW);
         traversalLabel.setFont(new Font("Arial", Font.BOLD, 14));
         traversalLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -47,6 +47,7 @@ class GraphPanel extends JPanel {
     private ArrayList<ArrayList<Integer>> adj;
     private int startVertex;
     private ArrayList<Integer> traversalResult;
+    private ArrayList<ArrayList<Integer>> levels;
     private int nodeRadius = 25;
     private int[] nodeX;
     private int[] nodeY;
@@ -55,12 +56,13 @@ class GraphPanel extends JPanel {
     private volatile boolean isAnimating = false;
     private volatile boolean stopAnimation = false;
     private volatile Thread animationThread = null;
-    private int currentStep = 0;
+    private int currentLevel = 0;
     
-    public GraphPanel(ArrayList<ArrayList<Integer>> adj, int startVertex, ArrayList<Integer> traversalResult) {
+    public GraphPanel(ArrayList<ArrayList<Integer>> adj, int startVertex, ArrayList<Integer> traversalResult, ArrayList<ArrayList<Integer>> levels) {
         this.adj = adj;
         this.startVertex = startVertex;
         this.traversalResult = traversalResult;
+        this.levels = levels;
         
         setBackground(Color.WHITE);
         int numNodes = adj.size();
@@ -85,33 +87,32 @@ class GraphPanel extends JPanel {
         stopAnimation = false;
         
         animationThread = new Thread(() -> {
-            for (int step = 0; step < traversalResult.size(); step++) {
+            for (int level = 0; level < levels.size(); level++) {
                 if (stopAnimation) {
                     isAnimating = false;
                     return;
                 }
-                currentStep = step;
-                int currentNode = traversalResult.get(step);
-                visitedNodes.add(currentNode);
-                if (step > 0) {
-                    int prevNode = -1;
-                    for (int j = step - 1; j >= 0; j--) {
-                        int candidate = traversalResult.get(j);
-                        if (adj.get(candidate).contains(currentNode)) {
-                            prevNode = candidate;
-                            break;
+                
+                currentLevel = level;
+                ArrayList<Integer> nodesInLevel = levels.get(level);
+                // tandai semua nodes sebagai visited
+                for (int node : nodesInLevel) visitedNodes.add(node);
+                // tandai edges dari level sebelumnya ke level saat ini
+                if (level > 0) {
+                    ArrayList<Integer> prevLevel = levels.get(level - 1);
+                    for (int currentNode : nodesInLevel) {
+                        for (int prevNode : prevLevel) {
+                            if (adj.get(prevNode).contains(currentNode)) {
+                                int edgeKey = prevNode * 1000 + currentNode;
+                                visitedEdges.add(edgeKey);
+                                break; 
+                            }
                         }
                     }
-                    if (prevNode != -1) {
-                        int edgeKey = prevNode * 1000 + currentNode;
-                        visitedEdges.add(edgeKey);
-                    }
                 }
-                
                 repaint();
-                
                 try {
-                    Thread.sleep(800); 
+                    Thread.sleep(3000); 
                 } catch (InterruptedException ex) {
                     isAnimating = false;
                     return;
@@ -130,22 +131,29 @@ class GraphPanel extends JPanel {
         }
         visitedNodes.clear();
         visitedEdges.clear();
-        currentStep = 0;
+        currentLevel = 0;
         repaint();
     }
     
     private void calculateNodePositions() {
-        int numNodes = adj.size();
         int panelWidth = getWidth();
         int panelHeight = getHeight();
-        int centerX = panelWidth / 2;
-        int centerY = (panelHeight - 100) / 2;
-        int radius = Math.min(panelWidth, panelHeight) / 3;
+        int verticalSpacing = (panelHeight - 150) / (levels.size() + 1);
+        int topMargin = 50;
+        int horizontalPadding = 400; 
         
-        for (int i = 0; i < numNodes; i++) {
-            double angle = 2 * Math.PI * i / numNodes - Math.PI / 2;
-            nodeX[i] = centerX + (int)(radius * Math.cos(angle));
-            nodeY[i] = centerY + (int)(radius * Math.sin(angle));
+        for (int levelIdx = 0; levelIdx < levels.size(); levelIdx++) {
+            ArrayList<Integer> nodesInLevel = levels.get(levelIdx);
+            int levelY = topMargin + (levelIdx + 1) * verticalSpacing;
+            int maxNodesWidth = panelWidth - horizontalPadding;
+            int numNodesInLevel = nodesInLevel.size();
+            int horizontalSpacing = maxNodesWidth / Math.max(numNodesInLevel, 1);
+            int startX = (panelWidth - (horizontalSpacing * (numNodesInLevel - 1))) / 2;
+            for (int i = 0; i < numNodesInLevel; i++) {
+                int nodeId = nodesInLevel.get(i);
+                nodeX[nodeId] = startX + (i * horizontalSpacing);
+                nodeY[nodeId] = levelY;
+            }
         }
     }
     
@@ -179,11 +187,11 @@ class GraphPanel extends JPanel {
         
         for (int i = 0; i < adj.size(); i++) {
             if (visitedNodes.contains(i)) {
-                g2d.setColor(new Color(0, 200, 100)); // Hijau untuk visited
+                g2d.setColor(new Color(0, 200, 100)); // hijau untuk visited
             } else if (i == startVertex) {
-                g2d.setColor(new Color(255, 150, 0)); // Orange untuk starting node
+                g2d.setColor(new Color(255, 150, 0)); // orange untuk starting node
             } else {
-                g2d.setColor(Color.WHITE); // Putih untuk unvisited
+                g2d.setColor(Color.WHITE);
             }
             
             g2d.fillOval(nodeX[i] - nodeRadius, nodeY[i] - nodeRadius, nodeRadius * 2, nodeRadius * 2);
@@ -208,13 +216,11 @@ class GraphPanel extends JPanel {
         g2d.setColor(Color.BLACK);
         g2d.drawString("Informasi:", legendX, legendY);
         
-        // Starting node
         g2d.setColor(new Color(255, 150, 0));
         g2d.fillOval(legendX, legendY + 15, 20, 20);
         g2d.setColor(Color.BLACK);
         g2d.drawString("Starting Node", legendX + 30, legendY + 30);
         
-        // Visited node
         g2d.setColor(new Color(0, 200, 100));
         g2d.fillOval(legendX, legendY + 45, 20, 20);
         g2d.setColor(Color.BLACK);
@@ -223,12 +229,8 @@ class GraphPanel extends JPanel {
         // Status
         g2d.setColor(Color.BLACK);
         g2d.setFont(new Font("Arial", Font.BOLD, 13));
-        if (isAnimating) {
-            g2d.drawString("Status: Step " + currentStep + "/" + traversalResult.size(), legendX, legendY - 20);
-        } else if (visitedNodes.isEmpty()) {
-            g2d.drawString("Status: Ready", legendX, legendY - 20);
-        } else {
-            g2d.drawString("Status: Done", legendX, legendY - 20);
-        }
+        if (isAnimating) g2d.drawString("Status: Level " + currentLevel + "/" + levels.size(), legendX, legendY - 20);
+        else if (visitedNodes.isEmpty()) g2d.drawString("Status: Ready", legendX, legendY - 20);
+        else g2d.drawString("Status: Done", legendX, legendY - 20);
     }
 }

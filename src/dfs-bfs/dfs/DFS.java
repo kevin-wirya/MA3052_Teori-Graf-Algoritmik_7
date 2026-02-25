@@ -4,7 +4,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import javax.swing.SwingUtilities;
 
-public class DepthFirstSearch {
+public class DFS {
     
     static void dfsRecursive(ArrayList<ArrayList<Integer>> adj,
            boolean[] visited, int s, ArrayList<Integer> res)
@@ -48,7 +48,7 @@ public class DepthFirstSearch {
                 System.out.print(res.get(i) + " ");
             }
             System.out.println();
-            SwingUtilities.invokeLater(() -> new DFSVisualizer(adj, startVertex, res));
+            SwingUtilities.invokeLater(() -> new DFSVisual(adj, startVertex, res));
         } catch (FileNotFoundException e) {
             System.out.println("File tidak ditemukan: " + fileName + ".txt");
         } catch (Exception e) {
