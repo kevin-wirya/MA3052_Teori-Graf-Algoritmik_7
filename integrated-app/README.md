@@ -4,7 +4,7 @@ Aplikasi GUI terintegrasi untuk visualisasi algoritma graf, dikembangkan untuk m
 
 ## Fitur
 
-- **7 Algoritma Built-in**: DFS, BFS, Connected Components, Connectivity Check, Path Finder, Bridge Finder, Articulation Points
+- **8 Algoritma Built-in**: DFS, BFS, Connected Components, Connectivity Check, Path Finder, Largest Component, Bipartite Check, Cycle Detection
 - **Force-Directed Layout**: Physics-based node positioning dengan repulsion, attraction, dan gravity
 - **Interaksi Dinamis**: Drag-and-drop node, zoom in/out (scroll), pan (drag area kosong)
 - **Simulasi Step-by-Step**: Animasi eksekusi algoritma dengan Play/Pause/Step/Speed kontrol
@@ -35,8 +35,9 @@ integrated-app/
 │   │       ├── ConnectedComponentsAlgorithm.java
 │   │       ├── ConnectivityCheckAlgorithm.java
 │   │       ├── PathFinderAlgorithm.java
-│   │       ├── BridgeFinderAlgorithm.java
-│   │       └── ArticulationPointAlgorithm.java
+│   │       ├── LargestComponentAlgorithm.java
+│   │       ├── BipartiteCheckAlgorithm.java
+│   │       └── CycleDetectionAlgorithm.java
 │   ├── layout/
 │   │   └── ForceDirectedLayout.java       # Fruchterman-Reingold engine
 │   ├── visualization/
@@ -45,34 +46,24 @@ integrated-app/
 │   ├── ui/
 │   │   ├── MainView.java                  # Layout utama (BorderPane)
 │   │   ├── AlgorithmSidebar.java          # Sidebar kiri (daftar algoritma)
-│   │   └── ControlPanel.java             # Panel kanan (input + kontrol)
+│   │   ├── ControlPanel.java              # Panel kanan (input + kontrol)
+│   │   └── ResultPanel.java              # Panel hasil eksekusi algoritma
 │   └── util/
 │       └── GraphParser.java               # Parser edge list / adj matrix
 ├── styles/
 │   └── theme.css                          # Light mode CSS theme
-├── compile.bat                            # Script kompilasi
-├── run.bat                                # Script menjalankan
+├── build.bat                              # Script kompilasi
+├── launch.bat                             # Script menjalankan
 └── README.md
 ```
 
 ## Cara Menjalankan
 
-### JDK 8 (JavaFX sudah termasuk)
+JavaFX SDK 21 sudah di-bundle di dalam folder `lib/`, sehingga tidak perlu install atau konfigurasi tambahan. Cukup pastikan **JDK 11+** sudah terinstall dan tersedia di PATH.
 
 ```batch
-compile.bat
-run.bat
-```
-
-### JDK 11+ (perlu download JavaFX SDK)
-
-1. Download JavaFX SDK dari https://openjfx.io
-2. Set environment variable:
-
-```batch
-set JAVAFX_PATH=C:\path\to\javafx-sdk-21
-compile.bat
-run.bat
+build.bat
+launch.bat
 ```
 
 ## Cara Menggunakan
