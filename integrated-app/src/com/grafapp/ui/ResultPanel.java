@@ -13,7 +13,6 @@ import java.util.*;
 
 /**
  * Panel hasil di bawah canvas (tengah bawah layar).
- * Light mode, scrollable, with action buttons for bipartite/cycle highlighting.
  */
 public class ResultPanel extends HBox {
 
@@ -119,7 +118,7 @@ public class ResultPanel extends HBox {
         }
     }
 
-    /** Add cycle highlight buttons */
+    // Highlight cycle
     @SuppressWarnings("unchecked")
     public void setCycleActions(Map<String, Object> data) {
         actionPane.getChildren().clear();
@@ -163,7 +162,7 @@ public class ResultPanel extends HBox {
             GraphNode n = g.getNode(id);
             if (n != null) n.setState(state);
         }
-        // Highlight edges of cycle
+        // Highlight edges dari cycle
         for (int i = 0; i < cycle.size(); i++) {
             int u = cycle.get(i);
             int v = cycle.get((i + 1) % cycle.size());

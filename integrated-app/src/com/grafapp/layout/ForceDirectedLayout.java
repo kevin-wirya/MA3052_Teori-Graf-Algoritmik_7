@@ -8,16 +8,11 @@ import java.util.*;
 
 /**
  * Force-Directed Graph Layout menggunakan model Fruchterman-Reingold.
- *
- * Fisika simulasi:
  *   - Gaya tolak (repulsion) antar semua pasangan node ~ 1/d^2 (Coulomb)
  *   - Gaya tarik (attraction) pada edge ~ d (Hooke / spring)
  *   - Gravitasi ke pusat canvas agar graf tidak melayang
  *   - Damping untuk meredam osilasi
  *   - Cooling schedule agar layout konvergen
- *
- * Berjalan di AnimationTimer (60 FPS) pada JavaFX Application Thread.
- * Untuk graf besar (>500 node), pertimbangkan Barnes-Hut optimization.
  */
 public class ForceDirectedLayout {
 
@@ -49,7 +44,7 @@ public class ForceDirectedLayout {
         this.height = Math.max(height, 200);
     }
 
-    /** Posisi awal acak */
+    // Posisi awal acak
     public void randomizePositions() {
         Random rand = new Random(42);
         double margin = 80;
@@ -61,7 +56,7 @@ public class ForceDirectedLayout {
         }
     }
 
-    /** Posisi awal melingkar */
+    // Posisi awal melingkar
     public void circularLayout() {
         List<GraphNode> nodes = new ArrayList<>(graph.getNodes());
         if (nodes.isEmpty()) return;
@@ -115,7 +110,6 @@ public class ForceDirectedLayout {
 
     public boolean isRunning() { return running; }
 
-    /** Satu langkah simulasi fisika */
     public void tick() {
         List<GraphNode> nodes = new ArrayList<>(graph.getNodes());
         if (nodes.size() <= 1) return;

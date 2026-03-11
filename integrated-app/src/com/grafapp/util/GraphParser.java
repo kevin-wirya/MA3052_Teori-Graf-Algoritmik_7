@@ -6,13 +6,10 @@ import java.nio.file.*;
 import java.util.*;
 
 /**
- * Parser untuk mengubah input teks (edge list / adjacency matrix) menjadi objek Graph.
+ * Parser untuk mengubah input teks adjacency list menjadi objek Graph.
  */
 public class GraphParser {
 
-    /**
-     * Hasil parsing: graph + starting vertex (jika ada).
-     */
     public static class ParseResult {
         private final Graph graph;
         private final int startVertex;
@@ -31,7 +28,7 @@ public class GraphParser {
      * Parse edge list format with header.
      * Format:
      *   Baris 1: "n m" (n = jumlah node, m = jumlah edge)
-     *   Baris 2..m+1: "u v" atau "u v weight" (m baris edge)
+     *   Baris 2..m+1: "u v" atau "u v w" (m baris edge)
      *   Baris terakhir (opsional): starting vertex
      */
     public static ParseResult parseEdgeListWithStart(String text, boolean directed) {

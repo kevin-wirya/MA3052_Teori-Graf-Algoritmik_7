@@ -6,9 +6,6 @@ import java.util.*;
 
 /**
  * Cycle Detection — mendeteksi SEMUA siklus dalam graf.
- * Menggunakan gray/black coloring agar hanya back-edge ke ancestor yang dihitung.
- * Undirected: back-edge = edge ke GRAY node (bukan parent).
- * Directed: back-edge = edge ke GRAY node.
  */
 public class CycleDetectionAlgorithm implements GraphAlgorithm {
 
@@ -38,8 +35,6 @@ public class CycleDetectionAlgorithm implements GraphAlgorithm {
             return detectUndirected(graph, steps);
         }
     }
-
-    // === UNDIRECTED: gray/black coloring, back-edge to GRAY ancestor only ===
 
     private AlgorithmResult detectUndirected(Graph graph, List<AlgorithmStep> steps) {
         Map<Integer, Integer> color = new HashMap<>();
@@ -82,14 +77,11 @@ public class CycleDetectionAlgorithm implements GraphAlgorithm {
                     allCycles.add(cycle);
                 }
             }
-            // BLACK neighbor = already finished descendant → skip, bukan cycle
         }
 
         color.put(node, BLACK);
         steps.add(AlgorithmStep.finishNode(node, "Selesai node " + node));
     }
-
-    // === DIRECTED: standard gray coloring ===
 
     private AlgorithmResult detectDirected(Graph graph, List<AlgorithmStep> steps) {
         Map<Integer, Integer> color = new HashMap<>();
@@ -137,18 +129,16 @@ public class CycleDetectionAlgorithm implements GraphAlgorithm {
         steps.add(AlgorithmStep.finishNode(node, "Selesai node " + node));
     }
 
-    // === Helpers ===
-
-    /** Rekonstruksi siklus dari node kembali ke ancestor via parent chain */
+    // Rekonstruksi siklus dari node kembali ke ancestor via parent chain
     private List<Integer> reconstructCycle(int fromNode, int toAncestor, Map<Integer, Integer> parent) {
         List<Integer> cycle = new ArrayList<>();
         cycle.add(toAncestor);
         int cur = fromNode;
-        int limit = 1000; // safety: cegah infinite loop
+        int limit = 1000;
         while (cur != toAncestor && limit-- > 0) {
             cycle.add(cur);
             Integer p = parent.get(cur);
-            if (p == null || p == -1) return null; // tidak bisa trace → skip
+            if (p == null || p == -1) return null; 
             cur = p;
         }
         if (cur != toAncestor) return null;

@@ -12,10 +12,7 @@ import javafx.scene.text.FontWeight;
 import java.util.List;
 import java.util.function.Consumer;
 
-/**
- * Sidebar kiri: menampilkan daftar algoritma yang tersedia,
- * dikelompokkan berdasarkan kategori.
- */
+// Left sidebar menampilkan daftar algoritma yang tersedia
 public class AlgorithmSidebar extends VBox {
 
     private Consumer<GraphAlgorithm> onAlgorithmSelected;

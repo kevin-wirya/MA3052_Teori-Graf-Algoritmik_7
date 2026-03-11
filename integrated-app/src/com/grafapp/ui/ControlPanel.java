@@ -123,14 +123,12 @@ public class ControlPanel extends VBox {
         }
     }
 
-    // === Section Builders ===
-
     private VBox createGraphInputSection() {
         VBox sec = section();
 
         Label title = sectionTitle("INPUT");
 
-        // --- File loader ---
+        // File loader
         fileCombo = new ComboBox<>();
         fileCombo.setPromptText("Pilih file");
         fileCombo.setMaxWidth(Double.MAX_VALUE);
@@ -144,7 +142,7 @@ public class ControlPanel extends VBox {
         graphInputArea.setFont(Font.font("Consolas", 11));
         graphInputArea.setStyle("-fx-control-inner-background: #FAFAFA;");
 
-        // Auto-generate graf saat mengetik (debounce 400ms)
+        // Auto-generate graf saat mengetik
         autoLoadDebounce = new PauseTransition(Duration.millis(400));
         autoLoadDebounce.setOnFinished(e -> autoLoadGraph());
         graphInputArea.textProperty().addListener((obs, o, n) -> autoLoadDebounce.playFromStart());
@@ -306,8 +304,7 @@ public class ControlPanel extends VBox {
         });
     }
 
-    // === Actions ===
-
+    // Actions
     private void updateGraphInfo(Graph g, int startVtx) {
         nodeCountLabel.setText("Node: " + g.getNodeCount());
         edgeCountLabel.setText("Edge: " + g.getEdgeCount());
@@ -319,7 +316,7 @@ public class ControlPanel extends VBox {
         }
     }
 
-    /** Auto-generate graf setiap kali teks berubah (tanpa warning dialog) */
+    // Auto load graph
     private void autoLoadGraph() {
         String text = graphInputArea.getText().trim();
         if (text.isEmpty()) {
@@ -346,7 +343,6 @@ public class ControlPanel extends VBox {
             String content = GraphParser.readFileText(
                 new File(dataDir, selected).getAbsolutePath());
             graphInputArea.setText(content.replace("\r\n", "\n").replace("\r", "\n"));
-            // autoLoadGraph will fire via text listener
         } catch (Exception ex) {
             warn("Gagal membaca file: " + ex.getMessage());
         }
@@ -440,8 +436,7 @@ public class ControlPanel extends VBox {
         simulation.play();
     }
 
-    // === Right-panel result buttons ===
-
+    // Right panel results
     @SuppressWarnings("unchecked")
     private void addBipartiteButtons(Map<String, Object> data) {
         boolean bipartite = (Boolean) data.getOrDefault("bipartite", false);
@@ -509,7 +504,7 @@ public class ControlPanel extends VBox {
         canvas.draw();
     }
 
-    // === Helper UI builders ===
+    // UI helper builder
 
     private VBox section() {
         VBox v = new VBox(6);

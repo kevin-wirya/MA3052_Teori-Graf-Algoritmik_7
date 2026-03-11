@@ -7,18 +7,6 @@ import javafx.animation.AnimationTimer;
 import javafx.beans.property.*;
 import java.util.List;
 
-/**
- * Controller animasi step-by-step untuk eksekusi algoritma.
- *
- * Fitur:
- *   - Play / Pause / Stop
- *   - Step Forward / Backward
- *   - Speed slider (0.25x – 4x)
- *   - Go-to-step langsung
- *
- * Menggunakan AnimationTimer agar speed bisa diubah real-time
- * tanpa perlu membuat ulang Timeline.
- */
 public class SimulationController {
 
     private final GraphCanvas canvas;
@@ -43,7 +31,7 @@ public class SimulationController {
 
     public void setOnStepChanged(Runnable cb) { this.onStepChanged = cb; }
 
-    /** Load hasil algoritma untuk animasi */
+    // Load hasil algoritma ke dalam animasi
     public void loadResult(AlgorithmResult result) {
         stop();
         this.graph = canvas.getGraph();
@@ -56,7 +44,7 @@ public class SimulationController {
         canvas.draw();
     }
 
-    /** Mulai auto-play animasi */
+    // Mulai autoplay animasi
     public void play() {
         if (steps == null || steps.isEmpty()) return;
         if (currentIndex >= steps.size() - 1) return;
@@ -83,7 +71,7 @@ public class SimulationController {
         animTimer.start();
     }
 
-    /** Pause animasi */
+    // Pause animasi
     public void pause() {
         if (animTimer != null) {
             animTimer.stop();
@@ -92,7 +80,7 @@ public class SimulationController {
         playing.set(false);
     }
 
-    /** Stop dan reset ke awal */
+    // Stop dan reset animasi ke awal
     public void stop() {
         pause();
         currentIndex = -1;
@@ -102,7 +90,7 @@ public class SimulationController {
         canvas.draw();
     }
 
-    /** Maju satu langkah */
+    // Maju satu langkah
     public void stepForward() {
         if (steps == null || currentIndex >= steps.size() - 1) return;
         currentIndex++;
@@ -112,7 +100,7 @@ public class SimulationController {
         if (onStepChanged != null) onStepChanged.run();
     }
 
-    /** Mundur satu langkah (re-apply dari awal) */
+    // Mundur satu langkah
     public void stepBackward() {
         if (steps == null || currentIndex < 0) return;
         graph.resetStates();
@@ -125,7 +113,7 @@ public class SimulationController {
         if (onStepChanged != null) onStepChanged.run();
     }
 
-    /** Langsung ke step tertentu */
+    // Langsung ke step tertentu
     public void goToStep(int index) {
         if (steps == null) return;
         index = Math.max(-1, Math.min(index, steps.size() - 1));
@@ -139,13 +127,10 @@ public class SimulationController {
         if (onStepChanged != null) onStepChanged.run();
     }
 
-    // --- Step Application ---
-
     private void applyStep(AlgorithmStep step) {
         if (step.getMessage() != null && !step.getMessage().isEmpty()) {
             currentMessage.set(step.getMessage());
         }
-
         switch (step.getAction()) {
             case VISIT_NODE:
             case PROCESS_NODE:
@@ -202,8 +187,6 @@ public class SimulationController {
             if (e != null) e.setState(state);
         }
     }
-
-    // --- Properties for binding ---
 
     public DoubleProperty speedProperty() { return speed; }
     public BooleanProperty playingProperty() { return playing; }

@@ -18,15 +18,6 @@ import javafx.scene.text.FontWeight;
 import javafx.scene.text.TextAlignment;
 import javafx.geometry.VPos;
 
-/**
- * Canvas untuk rendering graf dengan dukungan:
- *   - Force-directed layout (physics-based)
- *   - Drag-and-drop node
- *   - Zoom in/out (scroll wheel)
- *   - Pan (drag pada area kosong)
- *   - Mode interaksi: Select, Add Node, Add Edge, Delete
- *   - Anti-aliased rendering dengan shadow dan gradient
- */
 public class GraphCanvas extends Pane {
 
     public enum InteractionMode { SELECT, ADD_NODE, ADD_EDGE, DELETE }
@@ -66,8 +57,7 @@ public class GraphCanvas extends Pane {
         setupMouseHandlers();
     }
 
-    // --- Public API ---
-
+    // Public API
     public void setGraph(Graph graph) {
         this.graph = graph;
         if (layout != null) layout.stop();
@@ -107,8 +97,7 @@ public class GraphCanvas extends Pane {
         draw();
     }
 
-    // --- Mouse Handlers ---
-
+    // Mouse handlers
     private void setupMouseHandlers() {
         setOnMousePressed(this::handleMousePressed);
         setOnMouseDragged(this::handleMouseDragged);
@@ -224,8 +213,7 @@ public class GraphCanvas extends Pane {
         if (layout == null || !layout.isRunning()) draw();
     }
 
-    // --- Coordinate Transform ---
-
+    // Transformasi koordinat
     private double toGraphX(double sx) { return (sx - panX) / zoom; }
     private double toGraphY(double sy) { return (sy - panY) / zoom; }
 
@@ -244,8 +232,7 @@ public class GraphCanvas extends Pane {
         if (onGraphChanged != null) onGraphChanged.run();
     }
 
-    // --- Rendering ---
-
+    // Menggambar graf
     public void draw() {
         GraphicsContext gc = canvas.getGraphicsContext2D();
         double w = canvas.getWidth();
@@ -266,17 +253,17 @@ public class GraphCanvas extends Pane {
         gc.translate(panX, panY);
         gc.scale(zoom, zoom);
 
-        // Edges (di bawah nodes)
+        // Edges
         for (GraphEdge edge : graph.getEdges()) {
             drawEdge(gc, edge);
         }
 
-        // Nodes (di atas edges)
+        // Nodes
         for (GraphNode node : graph.getNodes()) {
             drawNode(gc, node);
         }
 
-        // Edge-in-progress (saat mode ADD_EDGE)
+        // Edge-in-progress
         if (edgeStartNode != null) {
             gc.setStroke(Color.web("#90CAF9"));
             gc.setLineWidth(2);
@@ -383,7 +370,7 @@ public class GraphCanvas extends Pane {
         gc.setFill(Color.rgb(0, 0, 0, 0.10));
         gc.fillOval(x - r + 2, y - r + 3, r * 2, r * 2);
 
-        // Fill (gradient untuk efek 3D ringan)
+        // Fill
         Color fill = state.getFill();
         Color lighter = fill.interpolate(Color.WHITE, 0.3);
         RadialGradient gradient = new RadialGradient(

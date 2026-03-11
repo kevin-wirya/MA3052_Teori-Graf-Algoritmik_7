@@ -8,15 +8,13 @@ import com.grafapp.ui.MainView;
 import java.io.File;
 
 /**
- * Entry point aplikasi Graf Algoritmik — Integrated Visualization Platform.
- *
  * Arsitektur:
- *   - Model:         com.grafapp.model          (Graph, Node, Edge, State)
- *   - Algorithm:     com.grafapp.algorithm       (Strategy pattern, Registry)
- *   - Layout:        com.grafapp.layout          (Force-Directed physics engine)
- *   - Visualization: com.grafapp.visualization   (Canvas renderer, Simulation)
- *   - UI:            com.grafapp.ui              (Sidebar, ControlPanel, MainView)
- *   - Utility:       com.grafapp.util            (Graph parser)
+ *   - Model:         com.grafapp.model
+ *   - Algorithm:     com.grafapp.algorithm
+ *   - Layout:        com.grafapp.layout
+ *   - Visualization: com.grafapp.visualization
+ *   - UI:            com.grafapp.ui
+ *   - Utility:       com.grafapp.util
  */
 public class Main extends Application {
 
@@ -26,7 +24,7 @@ public class Main extends Application {
 
         Scene scene = new Scene(mainView, 1440, 860);
 
-        // Load CSS (dari file relatif ke working directory)
+        // Load CSS ke working directory
         File cssFile = new File("styles/theme.css");
         if (cssFile.exists()) {
             scene.getStylesheets().add(cssFile.toURI().toString());
