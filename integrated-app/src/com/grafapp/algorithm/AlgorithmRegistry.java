@@ -25,7 +25,9 @@ public class AlgorithmRegistry {
         register(new PathFinderAlgorithm());
         // -- Properties --
         register(new BipartiteCheckAlgorithm());
+        register(new DiameterAlgorithm());
         register(new CycleDetectionAlgorithm());
+        register(new GirthAlgorithm());
     }
 
     public static AlgorithmRegistry getInstance() { return INSTANCE; }

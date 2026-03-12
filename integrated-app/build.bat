@@ -32,6 +32,8 @@ javac --module-path lib\javafx-sdk-21.0.2\lib ^
     src\com\grafapp\algorithm\impl\LargestComponentAlgorithm.java ^
     src\com\grafapp\algorithm\impl\BipartiteCheckAlgorithm.java ^
     src\com\grafapp\algorithm\impl\CycleDetectionAlgorithm.java ^
+    src\com\grafapp\algorithm\impl\DiameterAlgorithm.java ^
+    src\com\grafapp\algorithm\impl\GirthAlgorithm.java ^
     src\com\grafapp\layout\ForceDirectedLayout.java ^
     src\com\grafapp\visualization\GraphCanvas.java ^
     src\com\grafapp\visualization\SimulationController.java ^
