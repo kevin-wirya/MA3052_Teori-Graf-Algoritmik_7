@@ -4,11 +4,6 @@ import com.grafapp.algorithm.*;
 import com.grafapp.model.Graph;
 import java.util.*;
 
-/**
- * Graph Diameter — menghitung diameter graf, yaitu jarak terpanjang
- * di antara semua pasangan shortest path dalam graf.
- * Menggunakan BFS dari setiap node untuk menghitung shortest paths.
- */
 public class DiameterAlgorithm implements GraphAlgorithm {
 
     @Override public String getName() { return "Graph Diameter"; }
@@ -37,7 +32,6 @@ public class DiameterAlgorithm implements GraphAlgorithm {
             return new AlgorithmResult(steps, "Graf kosong, diameter tidak terdefinisi.");
         }
 
-        // Check connectivity first via BFS from the first node
         Set<Integer> reachable = new HashSet<>();
         Queue<Integer> checkQueue = new LinkedList<>();
         int first = sortedIds.get(0);
@@ -61,7 +55,7 @@ public class DiameterAlgorithm implements GraphAlgorithm {
         int diameterU = -1, diameterV = -1;
         Map<Integer, Integer> eccentricities = new LinkedHashMap<>();
 
-        // BFS from every node to compute eccentricity
+        
         for (int source : sortedIds) {
             steps.add(AlgorithmStep.visitNode(source,
                 "Memulai BFS dari node " + source + " untuk menghitung eccentricity."));
@@ -105,7 +99,7 @@ public class DiameterAlgorithm implements GraphAlgorithm {
             }
         }
 
-        // Highlight the diameter path using BFS to reconstruct it
+        
         if (diameterU != -1 && diameterV != -1) {
             List<Integer> path = bfsPath(graph, diameterU, diameterV);
             if (path != null) {
@@ -132,7 +126,6 @@ public class DiameterAlgorithm implements GraphAlgorithm {
         return new AlgorithmResult(steps, summary, data);
     }
 
-    /** BFS shortest path reconstruction from source to target. */
     private List<Integer> bfsPath(Graph graph, int source, int target) {
         Map<Integer, Integer> parent = new HashMap<>();
         Queue<Integer> queue = new LinkedList<>();
