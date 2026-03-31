@@ -406,20 +406,7 @@ public class ControlPanel extends VBox {
         resultActionPane.getChildren().clear();
 
         Map<String, Object> resData = result.getData();
-
-        // Tampilkan traversal order jika ada
-        @SuppressWarnings("unchecked")
-        List<Integer> order = (List<Integer>) resData.get("traversalOrder");
-        if (order != null && !order.isEmpty()) {
-            StringBuilder sb = new StringBuilder("Traversal: ");
-            for (int i = 0; i < order.size(); i++) {
-                if (i > 0) sb.append(" \u2192 ");
-                sb.append(order.get(i));
-            }
-            resultPanel.setDetail(sb.toString());
-        } else {
-            resultPanel.setDetail("");
-        }
+        resultPanel.setDetail(buildResultDetailText(resData));
 
         // Bipartite actions
         if (resData.containsKey("bipartite")) {
@@ -434,6 +421,52 @@ public class ControlPanel extends VBox {
         }
 
         simulation.play();
+    }
+
+    @SuppressWarnings("unchecked")
+    private String buildResultDetailText(Map<String, Object> resData) {
+        List<Integer> order = (List<Integer>) resData.get("traversalOrder");
+        if (order != null && !order.isEmpty()) {
+            return "Traversal: " + formatNodePath(order);
+        }
+
+        List<Integer> path = (List<Integer>) resData.get("shortestPath");
+        if ((path == null || path.isEmpty()) && resData.get("path") instanceof List) {
+            path = (List<Integer>) resData.get("path");
+        }
+
+        if (path != null && !path.isEmpty()) {
+            Object distanceObj = resData.containsKey("shortestDistance")
+                ? resData.get("shortestDistance")
+                : resData.get("distance");
+
+            if (distanceObj instanceof Number) {
+                double distance = ((Number) distanceObj).doubleValue();
+                if (Double.isFinite(distance)) {
+                    return "Path: " + formatNodePath(path)
+                        + " | Total Bobot: " + formatWeight(distance);
+                }
+            }
+            return "Path: " + formatNodePath(path);
+        }
+
+        return "";
+    }
+
+    private String formatNodePath(List<Integer> nodes) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < nodes.size(); i++) {
+            if (i > 0) sb.append(" \u2192 ");
+            sb.append(nodes.get(i));
+        }
+        return sb.toString();
+    }
+
+    private String formatWeight(double value) {
+        if (Math.abs(value - Math.rint(value)) < 1e-9) {
+            return String.valueOf((long) Math.rint(value));
+        }
+        return String.format(Locale.US, "%.2f", value);
     }
 
     // Right panel results

@@ -23,6 +23,7 @@ public class AlgorithmRegistry {
         register(new LargestComponentAlgorithm());
         // -- Path Finding --
         register(new PathFinderAlgorithm());
+        register(new DijkstraShortestPathAlgorithm());
         // -- Properties --
         register(new BipartiteCheckAlgorithm());
         register(new DiameterAlgorithm());

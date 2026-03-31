@@ -4,7 +4,7 @@ Aplikasi GUI terintegrasi untuk visualisasi algoritma graf, dikembangkan untuk m
 
 ## Fitur
 
-- **8 Algoritma Built-in**: DFS, BFS, Connected Components, Connectivity Check, Path Finder, Largest Component, Bipartite Check, Cycle Detection
+- **11 Algoritma Built-in**: DFS, BFS, Connectivity Check, Connected Components, Largest Component, Path Finder (A -> B), Shortest Path (Dijkstra), Bipartite Check, Cycle Detection, Graph Diameter, Graph Girth
 - **Force-Directed Layout**: Physics-based node positioning dengan repulsion, attraction, dan gravity
 - **Interaksi Dinamis**: Drag-and-drop node, zoom in/out (scroll), pan (drag area kosong)
 - **Simulasi Step-by-Step**: Animasi eksekusi algoritma dengan Play/Pause/Step/Speed kontrol
@@ -35,9 +35,12 @@ integrated-app/
 │   │       ├── ConnectedComponentsAlgorithm.java
 │   │       ├── ConnectivityCheckAlgorithm.java
 │   │       ├── PathFinderAlgorithm.java
+│   │       ├── DijkstraShortestPathAlgorithm.java
 │   │       ├── LargestComponentAlgorithm.java
 │   │       ├── BipartiteCheckAlgorithm.java
-│   │       └── CycleDetectionAlgorithm.java
+│   │       ├── CycleDetectionAlgorithm.java
+│   │       ├── DiameterAlgorithm.java
+│   │       └── GirthAlgorithm.java
 │   ├── layout/
 │   │   └── ForceDirectedLayout.java       # Fruchterman-Reingold engine
 │   ├── visualization/
@@ -68,7 +71,8 @@ launch.bat
 
 ## Cara Menggunakan
 
-1. **Input graf** di panel kanan via text area (format: edge list, satu edge per baris `u v`)  
+1. **Input graf** di panel kanan via text area (format: edge list, satu edge per baris `u v` atau `u v w`)  
+    centang **Weighted** jika memakai bobot edge
    atau klik **Sample** untuk contoh graf
 2. **Pilih algoritma** dari sidebar kiri
 3. **Isi parameter** (misal: Start Node) di panel kanan
@@ -87,7 +91,7 @@ launch.bat
 
 ## Menambah Algoritma Baru
 
-Untuk menambah algoritma baru (misal: Dijkstra), cukup 2 langkah:
+Untuk menambah algoritma baru (misal: Bellman-Ford), cukup 2 langkah:
 
 ### 1. Buat class yang implements `GraphAlgorithm`
 
@@ -98,10 +102,10 @@ import com.grafapp.algorithm.*;
 import com.grafapp.model.Graph;
 import java.util.*;
 
-public class DijkstraAlgorithm implements GraphAlgorithm {
-    @Override public String getName() { return "Dijkstra's Algorithm"; }
-    @Override public String getCategory() { return "Shortest Path"; }
-    @Override public String getDescription() { return "Shortest path dari source ke semua node."; }
+public class NewAlgorithm implements GraphAlgorithm {
+    @Override public String getName() { return "New Algorithm"; }
+    @Override public String getCategory() { return "Custom"; }
+    @Override public String getDescription() { return "Deskripsi singkat algoritma."; }
 
     @Override
     public List<ParameterInfo> getRequiredParameters() {
@@ -113,9 +117,9 @@ public class DijkstraAlgorithm implements GraphAlgorithm {
     @Override
     public AlgorithmResult execute(Graph graph, Map<String, Object> parameters) {
         List<AlgorithmStep> steps = new ArrayList<>();
-        // ... implementasi Dijkstra ...
+        // ... implementasi algoritma ...
         // Gunakan AlgorithmStep.visitNode(), traverseEdge(), dll.
-        return new AlgorithmResult(steps, "Dijkstra selesai.");
+        return new AlgorithmResult(steps, "Algoritma custom selesai.");
     }
 }
 ```
@@ -124,7 +128,7 @@ public class DijkstraAlgorithm implements GraphAlgorithm {
 
 ```java
 // Di constructor AlgorithmRegistry:
-register(new DijkstraAlgorithm());
+register(new NewAlgorithm());
 ```
 
 Tidak perlu mengubah UI — sidebar dan panel kontrol otomatis menyesuaikan!

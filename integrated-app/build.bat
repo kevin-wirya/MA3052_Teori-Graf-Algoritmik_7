@@ -29,6 +29,7 @@ javac --module-path lib\javafx-sdk-21.0.2\lib ^
     src\com\grafapp\algorithm\impl\ConnectedComponentsAlgorithm.java ^
     src\com\grafapp\algorithm\impl\ConnectivityCheckAlgorithm.java ^
     src\com\grafapp\algorithm\impl\PathFinderAlgorithm.java ^
+    src\com\grafapp\algorithm\impl\DijkstraShortestPathAlgorithm.java ^
     src\com\grafapp\algorithm\impl\LargestComponentAlgorithm.java ^
     src\com\grafapp\algorithm\impl\BipartiteCheckAlgorithm.java ^
     src\com\grafapp\algorithm\impl\CycleDetectionAlgorithm.java ^
