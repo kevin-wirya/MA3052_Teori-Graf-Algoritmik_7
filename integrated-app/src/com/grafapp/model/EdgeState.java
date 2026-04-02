@@ -11,7 +11,7 @@ public enum EdgeState {
     VISITED(Color.web("#64B5F6"), 2.5),
     BRIDGE(Color.web("#F44336"), 3.5),
     PATH(Color.web("#4CAF50"), 3.0),
-    TREE_EDGE(Color.web("#2196F3"), 2.5);
+    TREE_EDGE(Color.web("#00897B"), 3.5);
 
     private final Color color;
     private final double width;

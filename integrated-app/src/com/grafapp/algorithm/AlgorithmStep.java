@@ -17,6 +17,7 @@ public class AlgorithmStep {
         FINISH_EDGE,
         MARK_PATH_NODE,
         MARK_PATH_EDGE,
+        MARK_TREE_EDGE,
         MARK_BRIDGE,
         MARK_ARTICULATION,
         MARK_COMPONENT,
@@ -85,6 +86,14 @@ public class AlgorithmStep {
 
     public static AlgorithmStep markPathEdge(int source, int target, String message) {
         AlgorithmStep s = new AlgorithmStep(Action.MARK_PATH_EDGE);
+        s.edgeSource = source;
+        s.edgeTarget = target;
+        s.message = message;
+        return s;
+    }
+
+    public static AlgorithmStep markTreeEdge(int source, int target, String message) {
+        AlgorithmStep s = new AlgorithmStep(Action.MARK_TREE_EDGE);
         s.edgeSource = source;
         s.edgeTarget = target;
         s.message = message;

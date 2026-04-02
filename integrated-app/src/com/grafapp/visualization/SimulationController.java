@@ -151,6 +151,9 @@ public class SimulationController {
             case MARK_PATH_EDGE:
                 setEdgeState(step.getEdgeSource(), step.getEdgeTarget(), EdgeState.PATH);
                 break;
+            case MARK_TREE_EDGE:
+                setEdgeState(step.getEdgeSource(), step.getEdgeTarget(), EdgeState.TREE_EDGE);
+                break;
             case MARK_BRIDGE:
                 setEdgeState(step.getEdgeSource(), step.getEdgeTarget(), EdgeState.BRIDGE);
                 break;

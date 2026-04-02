@@ -24,6 +24,9 @@ public class AlgorithmRegistry {
         // -- Path Finding --
         register(new PathFinderAlgorithm());
         register(new DijkstraShortestPathAlgorithm());
+        // -- Spanning Tree --
+        register(new MinimumSpanningTreeAlgorithm());
+        register(new PrimMinimumSpanningTreeAlgorithm());
         // -- Properties --
         register(new BipartiteCheckAlgorithm());
         register(new DiameterAlgorithm());

@@ -133,6 +133,7 @@ public class AlgorithmSidebar extends VBox {
         legend.getChildren().add(legendItem("#FFF9C4", "#F9A825", "Processing"));
         legend.getChildren().add(legendItem("#BBDEFB", "#1976D2", "Visited"));
         legend.getChildren().add(legendItem("#C8E6C9", "#388E3C", "Path"));
+        legend.getChildren().add(legendItem("#E0F2F1", "#00897B", "Tree Edge"));
         legend.getChildren().add(legendItem("#FFE0B2", "#E65100", "Articulation Point"));
 
         return legend;

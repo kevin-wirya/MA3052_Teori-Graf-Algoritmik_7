@@ -141,6 +141,19 @@ public class ResultPanel extends HBox {
         }
     }
 
+    @SuppressWarnings("unchecked")
+    public void setMstActions(Map<String, Object> data) {
+        actionPane.getChildren().clear();
+        if (canvas == null) return;
+
+        List<List<Integer>> mstEdges = (List<List<Integer>>) data.get("mstEdges");
+        if (mstEdges == null || mstEdges.isEmpty()) return;
+
+        Button btn = actionButton("Highlight MST", "#1976D2");
+        btn.setOnAction(e -> highlightTreeEdges(mstEdges));
+        actionPane.getChildren().add(btn);
+    }
+
     private void highlightNodes(List<Integer> nodes, NodeState state) {
         if (canvas == null) return;
         Graph g = canvas.getGraph();
@@ -168,6 +181,19 @@ public class ResultPanel extends HBox {
             int v = cycle.get((i + 1) % cycle.size());
             GraphEdge e = g.getEdge(u, v);
             if (e != null) e.setState(EdgeState.PATH);
+        }
+        canvas.draw();
+    }
+
+    private void highlightTreeEdges(List<List<Integer>> mstEdges) {
+        if (canvas == null) return;
+        Graph g = canvas.getGraph();
+        if (g == null) return;
+        g.resetStates();
+        for (List<Integer> edge : mstEdges) {
+            if (edge == null || edge.size() < 2) continue;
+            GraphEdge e = g.getEdge(edge.get(0), edge.get(1));
+            if (e != null) e.setState(EdgeState.TREE_EDGE);
         }
         canvas.draw();
     }

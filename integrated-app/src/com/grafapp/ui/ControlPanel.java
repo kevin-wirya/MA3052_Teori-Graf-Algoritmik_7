@@ -420,6 +420,12 @@ public class ControlPanel extends VBox {
             addCycleButtons(resData);
         }
 
+        // MST actions
+        if (resData.containsKey("mstEdges")) {
+            resultPanel.setMstActions(resData);
+            addMstButtons(resData);
+        }
+
         simulation.play();
     }
 
@@ -448,6 +454,17 @@ public class ControlPanel extends VBox {
                 }
             }
             return "Path: " + formatNodePath(path);
+        }
+
+        List<List<Integer>> mstEdges = (List<List<Integer>>) resData.get("mstEdges");
+        if (mstEdges != null && !mstEdges.isEmpty()) {
+            Object totalWeightObj = resData.get("mstWeight");
+            if (totalWeightObj instanceof Number) {
+                double totalWeight = ((Number) totalWeightObj).doubleValue();
+                return "MST: " + formatMstEdges(mstEdges)
+                    + " | Total Bobot: " + formatWeight(totalWeight);
+            }
+            return "MST: " + formatMstEdges(mstEdges);
         }
 
         return "";
@@ -509,6 +526,16 @@ public class ControlPanel extends VBox {
         }
     }
 
+    @SuppressWarnings("unchecked")
+    private void addMstButtons(Map<String, Object> data) {
+        List<List<Integer>> mstEdges = (List<List<Integer>>) data.get("mstEdges");
+        if (mstEdges == null || mstEdges.isEmpty()) return;
+
+        Button btn = smallBtn("Highlight MST", "#1976D2");
+        btn.setOnAction(e -> highlightTreeEdges(mstEdges));
+        resultActionPane.getChildren().add(btn);
+    }
+
     private void highlightNodes(List<Integer> nodes, NodeState state) {
         Graph g = canvas.getGraph();
         if (g == null) return;
@@ -535,6 +562,28 @@ public class ControlPanel extends VBox {
             if (e != null) e.setState(EdgeState.PATH);
         }
         canvas.draw();
+    }
+
+    private void highlightTreeEdges(List<List<Integer>> mstEdges) {
+        Graph g = canvas.getGraph();
+        if (g == null) return;
+        g.resetStates();
+        for (List<Integer> edge : mstEdges) {
+            if (edge == null || edge.size() < 2) continue;
+            GraphEdge e = g.getEdge(edge.get(0), edge.get(1));
+            if (e != null) e.setState(EdgeState.TREE_EDGE);
+        }
+        canvas.draw();
+    }
+
+    private String formatMstEdges(List<List<Integer>> edges) {
+        StringBuilder sb = new StringBuilder();
+        for (List<Integer> edge : edges) {
+            if (edge == null || edge.size() < 2) continue;
+            if (sb.length() > 0) sb.append(", ");
+            sb.append(edge.get(0)).append("-").append(edge.get(1));
+        }
+        return sb.toString();
     }
 
     // UI helper builder
