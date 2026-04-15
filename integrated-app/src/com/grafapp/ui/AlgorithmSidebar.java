@@ -17,6 +17,7 @@ public class AlgorithmSidebar extends VBox {
 
     private Consumer<GraphAlgorithm> onAlgorithmSelected;
     private final ToggleGroup algorithmGroup = new ToggleGroup();
+    private final VBox contentBox = new VBox();
 
     public AlgorithmSidebar() {
         setPrefWidth(260);
@@ -24,6 +25,9 @@ public class AlgorithmSidebar extends VBox {
         setMaxWidth(280);
         setSpacing(0);
         setStyle("-fx-background-color: white; -fx-border-color: #E0E0E0; -fx-border-width: 0 1 0 0;");
+
+        contentBox.setSpacing(0);
+        contentBox.setFillWidth(true);
 
         // Header
         Label header = new Label("Graph Algorithm Visualizer");
@@ -36,45 +40,54 @@ public class AlgorithmSidebar extends VBox {
         subtitle.setTextFill(Color.web("#9E9E9E"));
         subtitle.setPadding(new Insets(0, 20, 15, 20));
 
-        getChildren().addAll(header, subtitle, new Separator());
+        contentBox.getChildren().addAll(header, subtitle, new Separator());
 
         // Kategori & algoritma
         AlgorithmRegistry registry = AlgorithmRegistry.getInstance();
         for (String category : registry.getCategories()) {
-            addCategory(category, registry.getByCategory(category));
+            addCategory(contentBox, category, registry.getByCategory(category));
         }
 
         // Spacer
         Region spacer = new Region();
         VBox.setVgrow(spacer, Priority.ALWAYS);
-        getChildren().add(spacer);
+        contentBox.getChildren().add(spacer);
 
         // Legend warna
-        getChildren().add(new Separator());
-        getChildren().add(createLegend());
+        contentBox.getChildren().add(new Separator());
+        contentBox.getChildren().add(createLegend());
 
         // Footer
         Label footer = new Label("MA3052 Teori Graf Algoritmik \u2014 ITB");
         footer.setFont(Font.font("Segoe UI", 10));
         footer.setTextFill(Color.web("#BDBDBD"));
         footer.setPadding(new Insets(8, 20, 12, 20));
-        getChildren().add(footer);
+        contentBox.getChildren().add(footer);
+
+        ScrollPane scroll = new ScrollPane(contentBox);
+        scroll.setFitToWidth(true);
+        scroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        scroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+        scroll.setStyle("-fx-background-color: white; -fx-background: white;");
+
+        VBox.setVgrow(scroll, Priority.ALWAYS);
+        getChildren().add(scroll);
     }
 
     public void setOnAlgorithmSelected(Consumer<GraphAlgorithm> cb) {
         this.onAlgorithmSelected = cb;
     }
 
-    private void addCategory(String category, List<GraphAlgorithm> algorithms) {
+    private void addCategory(VBox container, String category, List<GraphAlgorithm> algorithms) {
         Label catLabel = new Label(category.toUpperCase());
         catLabel.setFont(Font.font("Segoe UI", FontWeight.BOLD, 11));
         catLabel.setTextFill(Color.web("#9E9E9E"));
         catLabel.setPadding(new Insets(14, 20, 4, 20));
-        getChildren().add(catLabel);
+        container.getChildren().add(catLabel);
 
         for (GraphAlgorithm algo : algorithms) {
             ToggleButton btn = createAlgoButton(algo);
-            getChildren().add(btn);
+            container.getChildren().add(btn);
         }
     }
 

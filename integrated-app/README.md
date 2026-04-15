@@ -4,7 +4,7 @@ Aplikasi GUI terintegrasi untuk visualisasi algoritma graf, dikembangkan untuk m
 
 ## Fitur
 
-- **12 Algoritma Built-in**: DFS, BFS, Connectivity Check, Connected Components, Largest Component, Path Finder (A -> B), Shortest Path (Dijkstra), Minimum Spanning Tree (Kruskal), Bipartite Check, Cycle Detection, Graph Diameter, Graph Girth
+- **14 Algoritma Built-in**: DFS, BFS, Connectivity Check, Connected Components, Largest Component, Path Finder (A -> B), Shortest Path (Dijkstra), Traveling Salesman (Nearest Neighbor), Minimum Spanning Tree (Kruskal), Minimum Spanning Tree (Prim), Bipartite Check, Cycle Detection, Graph Diameter, Graph Girth
 - **Force-Directed Layout**: Physics-based node positioning dengan repulsion, attraction, dan gravity
 - **Interaksi Dinamis**: Drag-and-drop node, zoom in/out (scroll), pan (drag area kosong)
 - **Simulasi Step-by-Step**: Animasi eksekusi algoritma dengan Play/Pause/Step/Speed kontrol
@@ -36,7 +36,9 @@ integrated-app/
 │   │       ├── ConnectivityCheckAlgorithm.java
 │   │       ├── PathFinderAlgorithm.java
 │   │       ├── DijkstraShortestPathAlgorithm.java
+│   │       ├── TravelingSalesmanNearestNeighborAlgorithm.java
 │   │       ├── MinimumSpanningTreeAlgorithm.java
+│   │       ├── PrimMinimumSpanningTreeAlgorithm.java
 │   │       ├── LargestComponentAlgorithm.java
 │   │       ├── BipartiteCheckAlgorithm.java
 │   │       ├── CycleDetectionAlgorithm.java
