@@ -68,6 +68,8 @@ public class ControlPanel extends VBox {
         VBox content = new VBox(0,
             createGraphInputSection(),
             sep(),
+            createGraphTypeSection(),
+            sep(),
             createGraphInfoSection(),
             sep(),
             createAlgorithmSection(),
@@ -170,6 +172,392 @@ public class ControlPanel extends VBox {
 
         sec.getChildren().addAll(title, fileCombo, graphInputArea, row);
         return sec;
+    }
+
+    private VBox createGraphTypeSection() {
+        VBox sec = section();
+
+        Label title = sectionTitle("GRAPH TYPES");
+        Label hint = new Label("Pilih tipe graf untuk mengisi input otomatis.");
+        hint.setFont(Font.font("Segoe UI", 10));
+        hint.setTextFill(Color.web("#757575"));
+        hint.setWrapText(true);
+
+        FlowPane buttonPane = new FlowPane(6, 6);
+        buttonPane.setPrefWrapLength(260);
+
+        addGraphTypeButton(buttonPane, "Graf Lengkap Kn", () -> {
+            Integer n = promptInt("Graf Lengkap Kn", "Masukkan n", 6, 1, 20);
+            if (n == null) return;
+            applyGeneratedGraphText(generateCompleteGraphKn(n));
+        });
+
+        addGraphTypeButton(buttonPane, "Graf Bipartit Lengkap Km,n", () -> {
+            Map<String, Integer> values = promptIntGroup(
+                "Graf Bipartit Lengkap Km,n",
+                new String[]{"m", "n"},
+                new int[]{3, 4},
+                new int[]{1, 1},
+                new int[]{20, 20}
+            );
+            if (values == null) return;
+            int m = values.get("m");
+            int n = values.get("n");
+            applyGeneratedGraphText(generateCompleteBipartiteKmn(m, n));
+        });
+
+        addGraphTypeButton(buttonPane, "Pohon Tn", () -> {
+            Integer n = promptInt("Pohon Tn", "Masukkan n", 10, 2, 80);
+            if (n == null) return;
+            applyGeneratedGraphText(generateTree(n));
+        });
+
+        addGraphTypeButton(buttonPane, "Siklus Cn", () -> {
+            Integer n = promptInt("Siklus Cn", "Masukkan n", 8, 3, 80);
+            if (n == null) return;
+            applyGeneratedGraphText(generateCycleCn(n));
+        });
+
+        addGraphTypeButton(buttonPane, "Lintasan Pn", () -> {
+            Integer n = promptInt("Lintasan Pn", "Masukkan n", 8, 2, 80);
+            if (n == null) return;
+            applyGeneratedGraphText(generatePathPn(n));
+        });
+
+        addGraphTypeButton(buttonPane, "Graf Roda Wn", () -> {
+            Integer n = promptInt("Graf Roda Wn", "Masukkan n", 8, 4, 40);
+            if (n == null) return;
+            applyGeneratedGraphText(generateWheelWn(n));
+        });
+
+        addGraphTypeButton(buttonPane, "Graf Prisma", () -> {
+            Integer n = promptInt("Graf Prisma", "Masukkan n", 6, 3, 30);
+            if (n == null) return;
+            applyGeneratedGraphText(generatePrismGraph(n));
+        });
+
+        addGraphTypeButton(buttonPane, "Petersen Graph", () ->
+            applyGeneratedGraphText(generateGeneralizedPetersen(5, 2)));
+
+        addGraphTypeButton(buttonPane, "Generalized Petersen P(n,k)", () -> {
+            Map<String, Integer> values = promptIntGroup(
+                "Generalized Petersen P(n,k)",
+                new String[]{"n", "k"},
+                new int[]{8, 2},
+                new int[]{5, 1},
+                new int[]{30, 14}
+            );
+            if (values == null) return;
+
+            int n = values.get("n");
+            int k = values.get("k");
+            int maxK = (n - 1) / 2;
+            if (k > maxK) {
+                warn("Untuk n = " + n + ", nilai k harus 1-" + maxK + ".");
+                return;
+            }
+
+            applyGeneratedGraphText(generateGeneralizedPetersen(n, k));
+        });
+
+        addGraphTypeButton(buttonPane, "Circulant Cn(a1,a2)", () -> {
+            Map<String, Integer> values = promptIntGroup(
+                "Circulant Graph Cn(a1,a2)",
+                new String[]{"n", "a1", "a2"},
+                new int[]{10, 1, 2},
+                new int[]{5, 1, 1},
+                new int[]{50, 25, 25}
+            );
+            if (values == null) return;
+
+            int n = values.get("n");
+            int a1 = values.get("a1");
+            int a2 = values.get("a2");
+            int maxA = Math.max(1, n / 2);
+
+            if (a1 >= a2) {
+                warn("a1 harus lebih kecil dari a2.");
+                return;
+            }
+            if (a1 > maxA || a2 > maxA) {
+                warn("Untuk n = " + n + ", nilai a1 dan a2 harus <= " + maxA + ".");
+                return;
+            }
+
+            applyGeneratedGraphText(generateCirculantGraph(n, a1, a2));
+        });
+
+        addGraphTypeButton(buttonPane, "Hypercubes H(n)", () -> {
+            Integer n = promptInt("Hypercube H(n)", "Masukkan dimensi n", 4, 1, 7);
+            if (n == null) return;
+            applyGeneratedGraphText(generateHypercube(n));
+        });
+
+        addGraphTypeButton(buttonPane, "Grid Graph G(m,n)", () -> {
+            Map<String, Integer> values = promptIntGroup(
+                "Grid Graph G(m,n)",
+                new String[]{"m", "n"},
+                new int[]{4, 4},
+                new int[]{2, 2},
+                new int[]{20, 20}
+            );
+            if (values == null) return;
+            int m = values.get("m");
+            int n = values.get("n");
+            applyGeneratedGraphText(generateGridGraph(m, n));
+        });
+
+        sec.getChildren().addAll(title, hint, buttonPane);
+        return sec;
+    }
+
+    private void addGraphTypeButton(FlowPane parent, String text, Runnable action) {
+        Button btn = new Button(text);
+        btn.setWrapText(true);
+        btn.setFont(Font.font("Segoe UI", FontWeight.SEMI_BOLD, 10));
+        btn.setPrefWidth(124);
+        btn.setStyle("-fx-background-color: #E3F2FD; -fx-text-fill: #0D47A1; "
+            + "-fx-background-radius: 4; -fx-cursor: hand; -fx-padding: 5 8;");
+        btn.setOnMouseEntered(e -> btn.setOpacity(0.85));
+        btn.setOnMouseExited(e -> btn.setOpacity(1.0));
+        btn.setOnAction(e -> action.run());
+        parent.getChildren().add(btn);
+    }
+
+    private Integer promptInt(String title, String prompt, int defaultValue, int min, int max) {
+        TextInputDialog dialog = new TextInputDialog(String.valueOf(defaultValue));
+        dialog.setTitle(title);
+        dialog.setHeaderText(null);
+        dialog.setContentText(prompt + " (" + min + "-" + max + "):");
+
+        Optional<String> res = dialog.showAndWait();
+        if (res.isEmpty()) return null;
+
+        try {
+            int val = Integer.parseInt(res.get().trim());
+            if (val < min || val > max) {
+                warn("Nilai harus pada rentang " + min + "-" + max + ".");
+                return null;
+            }
+            return val;
+        } catch (NumberFormatException ex) {
+            warn("Input harus berupa bilangan bulat.");
+            return null;
+        }
+    }
+
+    private Map<String, Integer> promptIntGroup(
+        String title,
+        String[] names,
+        int[] defaults,
+        int[] mins,
+        int[] maxs
+    ) {
+        if (names.length != defaults.length || names.length != mins.length || names.length != maxs.length) {
+            throw new IllegalArgumentException("Konfigurasi input group tidak konsisten.");
+        }
+
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle(title);
+        dialog.setHeaderText("Masukkan parameter:");
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(8);
+        grid.setPadding(new Insets(6, 0, 0, 0));
+
+        List<TextField> fields = new ArrayList<>();
+        for (int i = 0; i < names.length; i++) {
+            Label lbl = new Label(names[i] + " (" + mins[i] + "-" + maxs[i] + "): ");
+            TextField tf = new TextField(String.valueOf(defaults[i]));
+            tf.setPrefColumnCount(8);
+            fields.add(tf);
+            grid.add(lbl, 0, i);
+            grid.add(tf, 1, i);
+        }
+
+        dialog.getDialogPane().setContent(grid);
+
+        Optional<ButtonType> result = dialog.showAndWait();
+        if (result.isEmpty() || result.get() != ButtonType.OK) return null;
+
+        Map<String, Integer> values = new LinkedHashMap<>();
+        for (int i = 0; i < names.length; i++) {
+            String raw = fields.get(i).getText().trim();
+            try {
+                int val = Integer.parseInt(raw);
+                if (val < mins[i] || val > maxs[i]) {
+                    warn("Nilai '" + names[i] + "' harus pada rentang " + mins[i] + "-" + maxs[i] + ".");
+                    return null;
+                }
+                values.put(names[i], val);
+            } catch (NumberFormatException ex) {
+                warn("Nilai '" + names[i] + "' harus berupa bilangan bulat.");
+                return null;
+            }
+        }
+        return values;
+    }
+
+    private void applyGeneratedGraphText(String graphText) {
+        fileCombo.getSelectionModel().clearSelection();
+        directedCb.setSelected(false);
+        weightedCb.setSelected(false);
+        graphInputArea.setText(graphText);
+        autoLoadGraph();
+    }
+
+    private String generateCompleteGraphKn(int n) {
+        List<int[]> edges = new ArrayList<>();
+        for (int u = 0; u < n; u++) {
+            for (int v = u + 1; v < n; v++) {
+                edges.add(new int[]{u, v});
+            }
+        }
+        return toEdgeListText(n, edges);
+    }
+
+    private String generateCompleteBipartiteKmn(int m, int n) {
+        List<int[]> edges = new ArrayList<>();
+        int offset = m;
+        for (int u = 0; u < m; u++) {
+            for (int v = 0; v < n; v++) {
+                edges.add(new int[]{u, offset + v});
+            }
+        }
+        return toEdgeListText(m + n, edges);
+    }
+
+    private String generateTree(int n) {
+        List<int[]> edges = new ArrayList<>();
+        for (int child = 1; child < n; child++) {
+            int parent = (child - 1) / 2;
+            edges.add(new int[]{parent, child});
+        }
+        return toEdgeListText(n, edges);
+    }
+
+    private String generateCycleCn(int n) {
+        List<int[]> edges = new ArrayList<>();
+        for (int u = 0; u < n; u++) {
+            int v = (u + 1) % n;
+            edges.add(new int[]{u, v});
+        }
+        return toEdgeListText(n, edges);
+    }
+
+    private String generatePathPn(int n) {
+        List<int[]> edges = new ArrayList<>();
+        for (int u = 0; u < n - 1; u++) {
+            edges.add(new int[]{u, u + 1});
+        }
+        return toEdgeListText(n, edges);
+    }
+
+    private String generateWheelWn(int n) {
+        List<int[]> edges = new ArrayList<>();
+        int rim = n - 1;
+        int center = n - 1;
+
+        for (int u = 0; u < rim; u++) {
+            int v = (u + 1) % rim;
+            edges.add(new int[]{u, v});
+            edges.add(new int[]{center, u});
+        }
+        return toEdgeListText(n, edges);
+    }
+
+    private String generatePrismGraph(int n) {
+        List<int[]> edges = new ArrayList<>();
+        int offset = n;
+        int totalNodes = 2 * n;
+
+        for (int u = 0; u < n; u++) {
+            int next = (u + 1) % n;
+            edges.add(new int[]{u, next});
+            edges.add(new int[]{offset + u, offset + next});
+            edges.add(new int[]{u, offset + u});
+        }
+        return toEdgeListText(totalNodes, edges);
+    }
+
+    private String generateGeneralizedPetersen(int n, int k) {
+        List<int[]> edges = new ArrayList<>();
+        Set<String> seen = new HashSet<>();
+        int offset = n;
+
+        for (int i = 0; i < n; i++) {
+            addUndirectedEdge(edges, seen, i, (i + 1) % n);
+            addUndirectedEdge(edges, seen, i, offset + i);
+            addUndirectedEdge(edges, seen, offset + i, offset + ((i + k) % n));
+        }
+        return toEdgeListText(2 * n, edges);
+    }
+
+    private String generateCirculantGraph(int n, int a1, int a2) {
+        List<int[]> edges = new ArrayList<>();
+        Set<String> seen = new HashSet<>();
+        int[] jumps = {a1, a2};
+
+        for (int u = 0; u < n; u++) {
+            for (int jump : jumps) {
+                int v = (u + jump) % n;
+                addUndirectedEdge(edges, seen, u, v);
+            }
+        }
+        return toEdgeListText(n, edges);
+    }
+
+    private String generateHypercube(int dimension) {
+        List<int[]> edges = new ArrayList<>();
+        int n = 1 << dimension;
+
+        for (int u = 0; u < n; u++) {
+            for (int bit = 0; bit < dimension; bit++) {
+                int v = u ^ (1 << bit);
+                if (u < v) {
+                    edges.add(new int[]{u, v});
+                }
+            }
+        }
+        return toEdgeListText(n, edges);
+    }
+
+    private String generateGridGraph(int rows, int cols) {
+        List<int[]> edges = new ArrayList<>();
+        int n = rows * cols;
+
+        for (int r = 0; r < rows; r++) {
+            for (int c = 0; c < cols; c++) {
+                int u = r * cols + c;
+                if (c + 1 < cols) {
+                    edges.add(new int[]{u, u + 1});
+                }
+                if (r + 1 < rows) {
+                    edges.add(new int[]{u, u + cols});
+                }
+            }
+        }
+        return toEdgeListText(n, edges);
+    }
+
+    private void addUndirectedEdge(List<int[]> edges, Set<String> seen, int u, int v) {
+        int a = Math.min(u, v);
+        int b = Math.max(u, v);
+        String key = a + ":" + b;
+        if (seen.add(key)) {
+            edges.add(new int[]{a, b});
+        }
+    }
+
+    private String toEdgeListText(int nodeCount, List<int[]> edges) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(nodeCount).append(" ").append(edges.size());
+        for (int[] e : edges) {
+            sb.append("\n").append(e[0]).append(" ").append(e[1]);
+        }
+        return sb.toString();
     }
 
     private VBox createGraphInfoSection() {
