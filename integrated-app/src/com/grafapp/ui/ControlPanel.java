@@ -40,6 +40,8 @@ public class ControlPanel extends VBox {
     private Button playBtn, pauseBtn;
     private CheckBox directedCb;
     private CheckBox weightedCb;
+    private CheckBox tspHasLabelsCb;
+    private CheckBox showEdgeWeightsCb;
 
     // Info labels
     private Label nodeCountLabel;
@@ -71,7 +73,6 @@ public class ControlPanel extends VBox {
 
         setPrefWidth(300);
         setMinWidth(280);
-        setMaxWidth(320);
         setSpacing(0);
         setStyle("-fx-background-color: white; -fx-border-color: #E0E0E0; -fx-border-width: 0 0 0 1;");
 
@@ -158,6 +159,10 @@ public class ControlPanel extends VBox {
             autoLoadGraph();
         });
 
+        tspHasLabelsCb = new CheckBox("Koordinat memiliki label");
+        tspHasLabelsCb.setFont(Font.font("Segoe UI", 11));
+        tspHasLabelsCb.setOnAction(e -> autoLoadGraph());
+
         // File loader
         fileCombo = new ComboBox<>();
         fileCombo.setPromptText("Pilih file");
@@ -189,6 +194,11 @@ public class ControlPanel extends VBox {
         weightedCb.setFont(Font.font("Segoe UI", 11));
         weightedCb.setOnAction(e -> autoLoadGraph());
 
+        showEdgeWeightsCb = new CheckBox("Tampilkan Jarak");
+        showEdgeWeightsCb.setFont(Font.font("Segoe UI", 11));
+        showEdgeWeightsCb.setSelected(true);
+        showEdgeWeightsCb.setOnAction(e -> canvas.setShowEdgeWeights(showEdgeWeightsCb.isSelected()));
+
         applyInputModeSettings();
 
         HBox row = new HBox(6);
@@ -202,7 +212,7 @@ public class ControlPanel extends VBox {
             canvas.draw();
             updateGraphInfo(new Graph(), -1);
         });
-        row.getChildren().addAll(clearBtn, directedCb, weightedCb);
+        row.getChildren().addAll(clearBtn, directedCb, weightedCb, showEdgeWeightsCb, tspHasLabelsCb);
         row.setAlignment(Pos.CENTER_LEFT);
 
         sec.getChildren().addAll(title, formatLabel, inputModeCombo, fileCombo, graphInputArea, row);
@@ -645,23 +655,22 @@ public class ControlPanel extends VBox {
             return;
         }
 
-        int level = 0;
         double topY = 100;
         double bottomY = 620;
-        while (true) {
-            int first = (1 << level) - 1;
-            if (first >= nodeCount) {
-                break;
-            }
-            int last = Math.min(nodeCount - 1, (1 << (level + 1)) - 2);
-            double y = topY + (bottomY - topY) * level / Math.max(1, estimateTreeDepth(nodeCount) - 1);
+        int maxDepth = estimateTreeDepth(nodeCount);
+        double minX = 80;
+        double maxX = 860;
+        double totalWidth = maxX - minX;
 
-            List<Integer> ids = new ArrayList<>();
-            for (int id = first; id <= last; id++) {
-                ids.add(id);
-            }
-            layoutNodesOnLine(graph, ids, 80, 860, y);
-            level++;
+        for (int id = 0; id < nodeCount; id++) {
+            int level = (int) (Math.log(id + 1) / Math.log(2));
+            int nodesInLevel = 1 << level;
+            int posInLevel = id - (nodesInLevel - 1);
+            
+            double y = maxDepth <= 1 ? topY : topY + (bottomY - topY) * level / (maxDepth - 1);
+            double x = minX + (posInLevel + 0.5) * (totalWidth / nodesInLevel);
+            
+            setNodePosition(graph, id, x, y);
         }
     }
 
@@ -1061,7 +1070,7 @@ public class ControlPanel extends VBox {
 
         GraphParser.ParseResult result;
         if (isCoordinateInputMode()) {
-            result = GraphParser.parseTspCoordinates(text);
+            result = GraphParser.parseTspCoordinates(text, tspHasLabelsCb.isSelected());
         } else {
             result = GraphParser.parseEdgeListWithStart(
                 text,
@@ -1211,16 +1220,37 @@ public class ControlPanel extends VBox {
         if (coordinateMode) {
             directedCb.setSelected(false);
             weightedCb.setSelected(true);
-            graphInputArea.setPromptText(
-                "Format koordinat TSP:\n"
-                    + "5\n"
-                    + "1 3\n"
-                    + "2 4\n"
-                    + "8 9\n"
-                    + "2 0\n"
-                    + "-2 4"
-            );
+            
+            if (tspHasLabelsCb != null && tspHasLabelsCb.isSelected()) {
+                graphInputArea.setPromptText(
+                    "Format koordinat TSP (dengan label):\n"
+                        + "5\n"
+                        + "Jakarta 1 3\n"
+                        + "Bandung 2 4\n"
+                        + "Bali 8 9\n"
+                        + "Surabaya 2 0\n"
+                        + "Papua -2 4"
+                );
+            } else {
+                graphInputArea.setPromptText(
+                    "Format koordinat TSP:\n"
+                        + "5\n"
+                        + "1 3\n"
+                        + "2 4\n"
+                        + "8 9\n"
+                        + "2 0\n"
+                        + "-2 4"
+                );
+            }
+            if (tspHasLabelsCb != null) {
+                tspHasLabelsCb.setVisible(true);
+                tspHasLabelsCb.setManaged(true);
+            }
         } else {
+            if (tspHasLabelsCb != null) {
+                tspHasLabelsCb.setVisible(false);
+                tspHasLabelsCb.setManaged(false);
+            }
             graphInputArea.setPromptText("Masukkan input");
         }
     }
@@ -1237,6 +1267,27 @@ public class ControlPanel extends VBox {
             if (GraphParser.isTspCoordinateFormat(normalized)) {
                 pendingPresetLayout = null;
                 inputModeCombo.setValue(INPUT_MODE_TSP_COORDINATES);
+                
+                // Auto-detect labels
+                boolean labelDet = false;
+                List<String> validLines = new ArrayList<>();
+                for (String l : normalized.split("\n")) {
+                    String tl = l.trim();
+                    if (!tl.isEmpty() && !tl.startsWith("#") && !tl.startsWith("//")) {
+                        validLines.add(tl);
+                    }
+                }
+                if (validLines.size() > 1) {
+                    String[] firstParts = validLines.get(0).split("[\\s,;]+");
+                    int startIndex = (firstParts.length == 1) ? 1 : 0;
+                    if (validLines.size() > startIndex) {
+                        String[] dataParts = validLines.get(startIndex).split("[\\s,;]+");
+                        if (dataParts.length > 2) {
+                            try { Double.parseDouble(dataParts[0]); } catch (NumberFormatException e) { labelDet = true; }
+                        }
+                    }
+                }
+                if (tspHasLabelsCb != null) tspHasLabelsCb.setSelected(labelDet);
             } else {
                 pendingPresetLayout = null;
                 inputModeCombo.setValue(INPUT_MODE_EDGE_LIST);
@@ -1324,8 +1375,15 @@ public class ControlPanel extends VBox {
         resultPanel.clearActions();
 
         // Tampilkan hasil di right-panel result section
-        resultSummaryLabel.setText(summaryText);
         resultActionPane.getChildren().clear();
+        if (resData.containsKey("timetable")) {
+            resultSummaryLabel.setText(result.getSummary());
+            @SuppressWarnings("unchecked")
+            List<List<List<Integer>>> timetable = (List<List<List<Integer>>>) resData.get("timetable");
+            resultActionPane.getChildren().add(buildTimetableView(timetable, graph));
+        } else {
+            resultSummaryLabel.setText(summaryText);
+        }
 
         resultPanel.setDetail(buildResultDetailText(resData, graph));
 
@@ -1457,6 +1515,69 @@ public class ControlPanel extends VBox {
         }
         return sb.toString();
     }
+
+    private javafx.scene.Node buildTimetableView(List<List<List<Integer>>> timetable, Graph graph) {
+        GridPane grid = new GridPane();
+        grid.setHgap(0);
+        grid.setVgap(0);
+        grid.setStyle("-fx-border-color: #BDBDBD; -fx-border-width: 1px; -fx-background-color: white;");
+        
+        Set<Integer> teachers = new TreeSet<>();
+        int periods = timetable.size();
+        Map<Integer, Map<Integer, Integer>> teacherToPeriodClass = new HashMap<>();
+        
+        for (int p = 0; p < periods; p++) {
+            for (List<Integer> edge : timetable.get(p)) {
+                if (edge == null || edge.size() < 2) continue;
+                int teacher = edge.get(0);
+                int cls = edge.get(1);
+                teachers.add(teacher);
+                teacherToPeriodClass.computeIfAbsent(teacher, k -> new HashMap<>()).put(p, cls);
+            }
+        }
+        
+        Label corner = new Label("Period");
+        corner.setStyle("-fx-font-weight: bold; -fx-text-fill: #212121; -fx-padding: 4 8; -fx-border-color: #E0E0E0; -fx-border-width: 0 1 1 0; -fx-background-color: #F5F5F5; -fx-alignment: center;");
+        corner.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
+        grid.add(corner, 0, 0);
+        
+        for (int p = 0; p < periods; p++) {
+            Label lbl = new Label(String.valueOf(p + 1));
+            lbl.setStyle("-fx-font-weight: bold; -fx-text-fill: #212121; -fx-padding: 4 8; -fx-alignment: center; -fx-border-color: #E0E0E0; -fx-border-width: 0 1 1 0; -fx-background-color: #F5F5F5;");
+            lbl.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
+            grid.add(lbl, p + 1, 0);
+        }
+        
+        int row = 1;
+        for (int teacherId : teachers) {
+            Label tLbl = new Label(formatNodeId(teacherId, graph));
+            tLbl.setStyle("-fx-font-weight: bold; -fx-text-fill: #212121; -fx-padding: 4 8; -fx-border-color: #E0E0E0; -fx-border-width: 0 1 1 0; -fx-background-color: #FAFAFA; -fx-alignment: center;");
+            tLbl.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
+            grid.add(tLbl, 0, row);
+            
+            for (int p = 0; p < periods; p++) {
+                Map<Integer, Integer> pMap = teacherToPeriodClass.get(teacherId);
+                String cName = "";
+                if (pMap != null && pMap.containsKey(p)) {
+                    cName = formatNodeId(pMap.get(p), graph);
+                }
+                Label cLbl = new Label(cName);
+                cLbl.setStyle("-fx-text-fill: #212121; -fx-padding: 4 8; -fx-alignment: center; -fx-border-color: #E0E0E0; -fx-border-width: 0 1 1 0;");
+                cLbl.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
+                grid.add(cLbl, p + 1, row);
+            }
+            row++;
+        }
+        
+        ScrollPane sp = new ScrollPane(grid);
+        sp.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        sp.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+        sp.prefWidthProperty().bind(resultActionPane.widthProperty().subtract(4));
+        sp.setMinHeight(ScrollPane.USE_PREF_SIZE);
+        sp.setStyle("-fx-background-color: transparent; -fx-background: transparent;");
+        return sp;
+    }
+
 
     private String formatMstEdges(List<List<Integer>> edges, Graph graph) {
         StringBuilder sb = new StringBuilder();

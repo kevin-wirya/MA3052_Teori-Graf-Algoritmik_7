@@ -41,8 +41,12 @@ public class MainView extends BorderPane {
         centerBox.getChildren().addAll(toolbar, canvas, resultPanel);
 
         setLeft(sidebar);
-        setCenter(centerBox);
-        setRight(controlPanel);
+        SplitPane splitPane = new SplitPane();
+        splitPane.getItems().addAll(centerBox, controlPanel);
+        splitPane.setDividerPositions(0.75); // Canvas gets 75%, ControlPanel gets 25%
+        SplitPane.setResizableWithParent(controlPanel, false);
+
+        setCenter(splitPane);
         setStyle("-fx-background-color: #F5F5F5;");
     }
 

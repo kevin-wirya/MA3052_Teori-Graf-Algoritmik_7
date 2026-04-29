@@ -26,7 +26,7 @@ public class TravelingSalesmanNearestNeighborAlgorithm implements GraphAlgorithm
 
     @Override
     public String getName() {
-        return "Traveling Salesman";
+        return "Traveling Salesman (Exact DP)";
     }
 
     @Override

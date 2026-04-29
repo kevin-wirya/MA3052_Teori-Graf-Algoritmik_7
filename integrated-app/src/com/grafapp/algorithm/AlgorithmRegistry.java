@@ -25,6 +25,7 @@ public class AlgorithmRegistry {
         register(new PathFinderAlgorithm());
         register(new DijkstraShortestPathAlgorithm());
         // -- Optimization --
+        register(new TravelingSalesmanGreedyAlgorithm());
         register(new TravelingSalesmanNearestNeighborAlgorithm());
         // -- Spanning Tree --
         register(new MinimumSpanningTreeAlgorithm());

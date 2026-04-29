@@ -141,7 +141,7 @@ public class GraphParser {
      * Node ID akan dibuat berurutan dari 0..n-1.
      * Edge lengkap otomatis dibentuk dengan bobot jarak Euclidean.
      */
-    public static ParseResult parseTspCoordinates(String text) {
+    public static ParseResult parseTspCoordinates(String text, boolean hasLabels) {
         Graph graph = createEmptyCoordinateGraph();
 
         List<String> dataLines = collectDataLines(text);
@@ -150,39 +150,56 @@ public class GraphParser {
             return new ParseResult(graph, -1, true);
         }
 
-        String[] header = dataLines.get(0).split("[\\s,;]+");
-        if (header.length != 1) {
-            return new ParseResult(graph, -1, true);
+        int startIndex = 0;
+        String[] firstLine = dataLines.get(0).split("[\\s,;]+");
+        if (firstLine.length == 1) {
+            try {
+                Integer.parseInt(firstLine[0]);
+                startIndex = 1; // It has a header
+            } catch (NumberFormatException ex) {
+                // Not a header
+            }
         }
 
-        int nodeCount;
-        try {
-            nodeCount = Integer.parseInt(header[0]);
-        } catch (NumberFormatException ex) {
-            return new ParseResult(graph, -1, true);
-        }
-
-        if (nodeCount <= 0 || dataLines.size() < nodeCount + 1) {
+        int nodeCount = dataLines.size() - startIndex;
+        if (nodeCount <= 0) {
             return new ParseResult(graph, -1, true);
         }
 
         List<GraphNode> orderedNodes = new ArrayList<>();
         for (int i = 0; i < nodeCount; i++) {
-            String[] parts = dataLines.get(i + 1).split("[\\s,;]+");
-            if (parts.length < 2) {
+            String[] parts = dataLines.get(startIndex + i).split("[\\s,;]+");
+            int minParts = hasLabels ? 3 : 2;
+            if (parts.length < minParts) {
                 return new ParseResult(createEmptyCoordinateGraph(), -1, true);
             }
 
             double x;
             double y;
+            String label = null;
             try {
-                x = Double.parseDouble(parts[0]);
-                y = Double.parseDouble(parts[1]);
+                x = Double.parseDouble(parts[parts.length - (hasLabels ? 2 : 2)]); // Wait, X and Y are always the last two!
+                // Actually, if hasLabels is true, the last two are X and Y.
+                // If hasLabels is false, they are still the last two (or the only two).
+                x = Double.parseDouble(parts[parts.length - 2]);
+                y = Double.parseDouble(parts[parts.length - 1]);
+                
+                if (hasLabels) {
+                    StringBuilder sb = new StringBuilder();
+                    for (int j = 0; j < parts.length - 2; j++) {
+                        if (j > 0) sb.append(" ");
+                        sb.append(parts[j]);
+                    }
+                    label = sb.toString();
+                }
             } catch (NumberFormatException ex) {
                 return new ParseResult(createEmptyCoordinateGraph(), -1, true);
             }
 
             GraphNode node = new GraphNode(i);
+            if (label != null && !label.isEmpty()) {
+                node.setLabel(label);
+            }
             node.setCoordinate(x, y);
             node.setX(x);
             node.setY(y);
@@ -215,34 +232,34 @@ public class GraphParser {
      */
     public static boolean isTspCoordinateFormat(String text) {
         List<String> dataLines = collectDataLines(text);
-        if (dataLines.size() < 2) {
+        if (dataLines.isEmpty()) {
             return false;
         }
 
-        String[] header = dataLines.get(0).split("[\\s,;]+");
-        if (header.length != 1) {
+        int startIndex = 0;
+        String[] firstLine = dataLines.get(0).split("[\\s,;]+");
+        if (firstLine.length == 1) {
+            try {
+                Integer.parseInt(firstLine[0]);
+                startIndex = 1;
+            } catch (NumberFormatException ex) {
+                // Not a header
+            }
+        }
+
+        int nodeCount = dataLines.size() - startIndex;
+        if (nodeCount <= 0) {
             return false;
         }
 
-        int nodeCount;
-        try {
-            nodeCount = Integer.parseInt(header[0]);
-        } catch (NumberFormatException ex) {
-            return false;
-        }
-
-        if (nodeCount <= 0 || dataLines.size() != nodeCount + 1) {
-            return false;
-        }
-
-        for (int i = 1; i <= nodeCount; i++) {
+        for (int i = startIndex; i < dataLines.size(); i++) {
             String[] parts = dataLines.get(i).split("[\\s,;]+");
             if (parts.length < 2) {
                 return false;
             }
             try {
-                Double.parseDouble(parts[0]);
-                Double.parseDouble(parts[1]);
+                Double.parseDouble(parts[parts.length - 2]);
+                Double.parseDouble(parts[parts.length - 1]);
             } catch (NumberFormatException ex) {
                 return false;
             }

@@ -17,6 +17,7 @@ import javafx.scene.text.FontWeight;
 import javafx.scene.text.TextAlignment;
 import javafx.geometry.VPos;
 import java.util.Locale;
+import java.util.List;
 
 public class GraphCanvas extends Pane {
 
@@ -40,10 +41,13 @@ public class GraphCanvas extends Pane {
     private InteractionMode mode = InteractionMode.SELECT;
 
     // Appearance
-    private static final double NODE_RADIUS = 22;
+    private double nodeRadius = 22;
     private static final Font NODE_FONT = Font.font("Segoe UI", FontWeight.BOLD, 13);
 
     private Runnable onGraphChanged;
+    
+    // Feature toggles
+    private boolean showEdgeWeights = true;
 
     public GraphCanvas() {
         canvas = new Canvas();
@@ -296,7 +300,7 @@ public class GraphCanvas extends Pane {
 
     private GraphNode findNodeAt(double gx, double gy) {
         if (graph == null) return null;
-        double r2 = (NODE_RADIUS + 5) * (NODE_RADIUS + 5);
+        double r2 = (nodeRadius + 5) * (nodeRadius + 5);
         for (GraphNode node : graph.getNodes()) {
             double dx = node.getX() - gx;
             double dy = node.getY() - gy;
@@ -326,6 +330,29 @@ public class GraphCanvas extends Pane {
             return;
         }
 
+        // Calculate dynamic node radius
+        if (graph.getNodeCount() > 1 && !fixedCoordinateMode) {
+            double minSqDist = Double.POSITIVE_INFINITY;
+            GraphNode[] nodes = graph.getNodes().toArray(new GraphNode[0]);
+            int n = nodes.length;
+            for (int i = 0; i < n; i++) {
+                GraphNode n1 = nodes[i];
+                for (int j = i + 1; j < n; j++) {
+                    GraphNode n2 = nodes[j];
+                    double dx = n1.getX() - n2.getX();
+                    double dy = n1.getY() - n2.getY();
+                    double sqDist = dx * dx + dy * dy;
+                    if (sqDist < minSqDist) {
+                        minSqDist = sqDist;
+                    }
+                }
+            }
+            double minDist = Math.sqrt(minSqDist);
+            nodeRadius = Math.max(8, Math.min(22, minDist * 0.4));
+        } else {
+            nodeRadius = 22;
+        }
+
         gc.save();
         gc.translate(panX, panY);
         gc.scale(zoom, zoom);
@@ -347,8 +374,8 @@ public class GraphCanvas extends Pane {
             gc.setLineDashes(8, 4);
             double sx = edgeStartNode.getX();
             double sy = edgeStartNode.getY();
-            gc.strokeOval(sx - NODE_RADIUS - 4, sy - NODE_RADIUS - 4,
-                (NODE_RADIUS + 4) * 2, (NODE_RADIUS + 4) * 2);
+            gc.strokeOval(sx - nodeRadius - 4, sy - nodeRadius - 4,
+                (nodeRadius + 4) * 2, (nodeRadius + 4) * 2);
             gc.setLineDashes();
         }
 
@@ -395,8 +422,8 @@ public class GraphCanvas extends Pane {
             drawArrow(gc, src.getX(), src.getY(), tgt.getX(), tgt.getY(), state.getColor());
         }
 
-        // Weight label (tampilkan semua weight jika graf weighted)
-        if (graph.isWeighted()) {
+        // Weight label (tampilkan semua weight jika graf weighted dan opsi aktif)
+        if (graph.isWeighted() && showEdgeWeights) {
             double mx = (src.getX() + tgt.getX()) / 2;
             double my = (src.getY() + tgt.getY()) / 2 - 10;
             // Background pill
@@ -422,7 +449,7 @@ public class GraphCanvas extends Pane {
         double spread = Math.toRadians(25);
 
         double dist = Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
-        double ratio = Math.max(0, (dist - NODE_RADIUS - 2) / dist);
+        double ratio = Math.max(0, (dist - nodeRadius - 2) / dist);
         double px = x1 + (x2 - x1) * ratio;
         double py = y1 + (y2 - y1) * ratio;
 
@@ -438,7 +465,7 @@ public class GraphCanvas extends Pane {
     private void drawNode(GraphicsContext gc, GraphNode node) {
         double x = node.getX();
         double y = node.getY();
-        double r = NODE_RADIUS;
+        double r = nodeRadius;
         NodeState state = node.getState();
 
         // Drop shadow
@@ -464,7 +491,11 @@ public class GraphCanvas extends Pane {
 
         // Label
         gc.setFill(Color.web("#212121"));
-        gc.setFont(NODE_FONT);
+        Font currentFont = NODE_FONT;
+        if (nodeRadius < 15) {
+            currentFont = Font.font("Segoe UI", FontWeight.BOLD, Math.max(6, nodeRadius * 0.6));
+        }
+        gc.setFont(currentFont);
         gc.setTextAlign(TextAlignment.CENTER);
         gc.setTextBaseline(VPos.CENTER);
         gc.fillText(node.getLabel(), x, y + 1);
@@ -487,5 +518,14 @@ public class GraphCanvas extends Pane {
             return String.valueOf((long) Math.rint(value));
         }
         return String.format(Locale.US, "%.2f", value);
+    }
+
+    public boolean isShowEdgeWeights() {
+        return showEdgeWeights;
+    }
+
+    public void setShowEdgeWeights(boolean showEdgeWeights) {
+        this.showEdgeWeights = showEdgeWeights;
+        draw();
     }
 }
