@@ -29,6 +29,9 @@ public class AlgorithmRegistry {
         // -- Spanning Tree --
         register(new MinimumSpanningTreeAlgorithm());
         register(new PrimMinimumSpanningTreeAlgorithm());
+        // -- Matching & Scheduling --
+        register(new BipartiteMaximumMatchingAlgorithm());
+        register(new TimetablingAlgorithm());
         // -- Properties --
         register(new BipartiteCheckAlgorithm());
         register(new DiameterAlgorithm());

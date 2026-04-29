@@ -23,11 +23,15 @@ import java.util.*;
  */
 public class ControlPanel extends VBox {
 
+    private static final String INPUT_MODE_EDGE_LIST = "Edge List";
+    private static final String INPUT_MODE_TSP_COORDINATES = "TSP Coordinates";
+
     private final GraphCanvas canvas;
     private final SimulationController simulation;
 
     private TextArea graphInputArea;
     private ComboBox<String> fileCombo;
+    private ComboBox<String> inputModeCombo;
     private VBox parameterBox;
     private Label algoNameLabel;
     private Label stepLabel;
@@ -48,10 +52,17 @@ public class ControlPanel extends VBox {
     private PauseTransition autoLoadDebounce;
     private int parsedStartVertex = -1;
     private ResultPanel resultPanel;
+    private boolean programmaticInputChange;
+    private GraphLayoutPresetApplier pendingPresetLayout;
 
     // Right-panel result section
     private Label resultSummaryLabel;
     private FlowPane resultActionPane;
+
+    @FunctionalInterface
+    private interface GraphLayoutPresetApplier {
+        void apply(Graph graph);
+    }
 
     public ControlPanel(GraphCanvas canvas, SimulationController simulation, ResultPanel resultPanel) {
         this.canvas = canvas;
@@ -130,6 +141,23 @@ public class ControlPanel extends VBox {
 
         Label title = sectionTitle("INPUT");
 
+        Label formatLabel = new Label("Format Input:");
+        formatLabel.setFont(Font.font("Segoe UI", 11));
+        formatLabel.setTextFill(Color.web("#616161"));
+
+        inputModeCombo = new ComboBox<>();
+        inputModeCombo.getItems().addAll(INPUT_MODE_EDGE_LIST, INPUT_MODE_TSP_COORDINATES);
+        inputModeCombo.setValue(INPUT_MODE_EDGE_LIST);
+        inputModeCombo.setMaxWidth(Double.MAX_VALUE);
+        inputModeCombo.setStyle("-fx-font-size: 11;");
+        inputModeCombo.setOnAction(e -> {
+            if (isCoordinateInputMode()) {
+                pendingPresetLayout = null;
+            }
+            applyInputModeSettings();
+            autoLoadGraph();
+        });
+
         // File loader
         fileCombo = new ComboBox<>();
         fileCombo.setPromptText("Pilih file");
@@ -139,7 +167,6 @@ public class ControlPanel extends VBox {
         fileCombo.setOnAction(e -> loadFromFile());
 
         graphInputArea = new TextArea();
-        graphInputArea.setPromptText("Masukkan input");
         graphInputArea.setPrefRowCount(5);
         graphInputArea.setFont(Font.font("Consolas", 11));
         graphInputArea.setStyle("-fx-control-inner-background: #FAFAFA;");
@@ -147,7 +174,12 @@ public class ControlPanel extends VBox {
         // Auto-generate graf saat mengetik
         autoLoadDebounce = new PauseTransition(Duration.millis(400));
         autoLoadDebounce.setOnFinished(e -> autoLoadGraph());
-        graphInputArea.textProperty().addListener((obs, o, n) -> autoLoadDebounce.playFromStart());
+        graphInputArea.textProperty().addListener((obs, o, n) -> {
+            if (!programmaticInputChange) {
+                pendingPresetLayout = null;
+                autoLoadDebounce.playFromStart();
+            }
+        });
 
         directedCb = new CheckBox("Directed");
         directedCb.setFont(Font.font("Segoe UI", 11));
@@ -157,10 +189,13 @@ public class ControlPanel extends VBox {
         weightedCb.setFont(Font.font("Segoe UI", 11));
         weightedCb.setOnAction(e -> autoLoadGraph());
 
+        applyInputModeSettings();
+
         HBox row = new HBox(6);
         Button clearBtn = smallBtn("Clear", "#757575");
 
         clearBtn.setOnAction(e -> {
+            pendingPresetLayout = null;
             fileCombo.getSelectionModel().clearSelection();
             graphInputArea.clear();
             canvas.setGraph(new Graph());
@@ -170,7 +205,7 @@ public class ControlPanel extends VBox {
         row.getChildren().addAll(clearBtn, directedCb, weightedCb);
         row.setAlignment(Pos.CENTER_LEFT);
 
-        sec.getChildren().addAll(title, fileCombo, graphInputArea, row);
+        sec.getChildren().addAll(title, formatLabel, inputModeCombo, fileCombo, graphInputArea, row);
         return sec;
     }
 
@@ -189,7 +224,7 @@ public class ControlPanel extends VBox {
         addGraphTypeButton(buttonPane, "Graf Lengkap Kn", () -> {
             Integer n = promptInt("Graf Lengkap Kn", "Masukkan n", 6, 1, 20);
             if (n == null) return;
-            applyGeneratedGraphText(generateCompleteGraphKn(n));
+            applyGeneratedGraphText(generateCompleteGraphKn(n), this::applyCompleteGraphLayout);
         });
 
         addGraphTypeButton(buttonPane, "Graf Bipartit Lengkap Km,n", () -> {
@@ -203,41 +238,50 @@ public class ControlPanel extends VBox {
             if (values == null) return;
             int m = values.get("m");
             int n = values.get("n");
-            applyGeneratedGraphText(generateCompleteBipartiteKmn(m, n));
+            applyGeneratedGraphText(
+                generateCompleteBipartiteKmn(m, n),
+                graph -> applyCompleteBipartiteLayout(graph, m, n)
+            );
         });
 
         addGraphTypeButton(buttonPane, "Pohon Tn", () -> {
             Integer n = promptInt("Pohon Tn", "Masukkan n", 10, 2, 80);
             if (n == null) return;
-            applyGeneratedGraphText(generateTree(n));
+            applyGeneratedGraphText(generateTree(n), graph -> applyTreeLayout(graph, n));
         });
 
         addGraphTypeButton(buttonPane, "Siklus Cn", () -> {
             Integer n = promptInt("Siklus Cn", "Masukkan n", 8, 3, 80);
             if (n == null) return;
-            applyGeneratedGraphText(generateCycleCn(n));
+            applyGeneratedGraphText(generateCycleCn(n), this::applyCycleLayout);
         });
 
         addGraphTypeButton(buttonPane, "Lintasan Pn", () -> {
             Integer n = promptInt("Lintasan Pn", "Masukkan n", 8, 2, 80);
             if (n == null) return;
-            applyGeneratedGraphText(generatePathPn(n));
+            applyGeneratedGraphText(generatePathPn(n), this::applyPathLayout);
         });
 
         addGraphTypeButton(buttonPane, "Graf Roda Wn", () -> {
             Integer n = promptInt("Graf Roda Wn", "Masukkan n", 8, 4, 40);
             if (n == null) return;
-            applyGeneratedGraphText(generateWheelWn(n));
+            applyGeneratedGraphText(generateWheelWn(n), graph -> applyWheelLayout(graph, n));
         });
 
         addGraphTypeButton(buttonPane, "Graf Prisma", () -> {
             Integer n = promptInt("Graf Prisma", "Masukkan n", 6, 3, 30);
             if (n == null) return;
-            applyGeneratedGraphText(generatePrismGraph(n));
+            applyGeneratedGraphText(generatePrismGraph(n), graph -> applyPrismLayout(graph, n));
         });
 
-        addGraphTypeButton(buttonPane, "Petersen Graph", () ->
-            applyGeneratedGraphText(generateGeneralizedPetersen(5, 2)));
+        addGraphTypeButton(buttonPane, "Petersen Graph", () -> {
+            int n = 5;
+            int k = 2;
+            applyGeneratedGraphText(
+                generateGeneralizedPetersen(n, k),
+                graph -> applyGeneralizedPetersenLayout(graph, n)
+            );
+        });
 
         addGraphTypeButton(buttonPane, "Generalized Petersen P(n,k)", () -> {
             Map<String, Integer> values = promptIntGroup(
@@ -257,7 +301,10 @@ public class ControlPanel extends VBox {
                 return;
             }
 
-            applyGeneratedGraphText(generateGeneralizedPetersen(n, k));
+            applyGeneratedGraphText(
+                generateGeneralizedPetersen(n, k),
+                graph -> applyGeneralizedPetersenLayout(graph, n)
+            );
         });
 
         addGraphTypeButton(buttonPane, "Circulant Cn(a1,a2)", () -> {
@@ -284,13 +331,13 @@ public class ControlPanel extends VBox {
                 return;
             }
 
-            applyGeneratedGraphText(generateCirculantGraph(n, a1, a2));
+            applyGeneratedGraphText(generateCirculantGraph(n, a1, a2), this::applyCirculantLayout);
         });
 
         addGraphTypeButton(buttonPane, "Hypercubes H(n)", () -> {
             Integer n = promptInt("Hypercube H(n)", "Masukkan dimensi n", 4, 1, 7);
             if (n == null) return;
-            applyGeneratedGraphText(generateHypercube(n));
+            applyGeneratedGraphText(generateHypercube(n), graph -> applyHypercubeLayout(graph, n));
         });
 
         addGraphTypeButton(buttonPane, "Grid Graph G(m,n)", () -> {
@@ -304,7 +351,7 @@ public class ControlPanel extends VBox {
             if (values == null) return;
             int m = values.get("m");
             int n = values.get("n");
-            applyGeneratedGraphText(generateGridGraph(m, n));
+            applyGeneratedGraphText(generateGridGraph(m, n), graph -> applyGridLayout(graph, m, n));
         });
 
         sec.getChildren().addAll(title, hint, buttonPane);
@@ -401,10 +448,25 @@ public class ControlPanel extends VBox {
     }
 
     private void applyGeneratedGraphText(String graphText) {
+        applyGeneratedGraphText(graphText, null);
+    }
+
+    private void applyGeneratedGraphText(String graphText, GraphLayoutPresetApplier layoutPreset) {
+        pendingPresetLayout = layoutPreset;
         fileCombo.getSelectionModel().clearSelection();
+        inputModeCombo.setValue(INPUT_MODE_EDGE_LIST);
+        applyInputModeSettings();
         directedCb.setSelected(false);
         weightedCb.setSelected(false);
-        graphInputArea.setText(graphText);
+
+        programmaticInputChange = true;
+        try {
+            graphInputArea.setText(graphText);
+        } finally {
+            programmaticInputChange = false;
+        }
+
+        autoLoadDebounce.stop();
         autoLoadGraph();
     }
 
@@ -560,6 +622,288 @@ public class ControlPanel extends VBox {
         return sb.toString();
     }
 
+    private void applyCompleteGraphLayout(Graph graph) {
+        applyCycleLayout(graph);
+    }
+
+    private void applyCompleteBipartiteLayout(Graph graph, int m, int n) {
+        List<Integer> upper = new ArrayList<>();
+        List<Integer> lower = new ArrayList<>();
+        for (int i = 0; i < m; i++) {
+            upper.add(i);
+        }
+        for (int i = 0; i < n; i++) {
+            lower.add(m + i);
+        }
+
+        layoutNodesOnLine(graph, upper, 120, 820, 200);
+        layoutNodesOnLine(graph, lower, 120, 820, 500);
+    }
+
+    private void applyTreeLayout(Graph graph, int nodeCount) {
+        if (nodeCount <= 0) {
+            return;
+        }
+
+        int level = 0;
+        double topY = 100;
+        double bottomY = 620;
+        while (true) {
+            int first = (1 << level) - 1;
+            if (first >= nodeCount) {
+                break;
+            }
+            int last = Math.min(nodeCount - 1, (1 << (level + 1)) - 2);
+            double y = topY + (bottomY - topY) * level / Math.max(1, estimateTreeDepth(nodeCount) - 1);
+
+            List<Integer> ids = new ArrayList<>();
+            for (int id = first; id <= last; id++) {
+                ids.add(id);
+            }
+            layoutNodesOnLine(graph, ids, 80, 860, y);
+            level++;
+        }
+    }
+
+    private int estimateTreeDepth(int nodeCount) {
+        int depth = 0;
+        int covered = 0;
+        int nodesInLevel = 1;
+        while (covered < nodeCount) {
+            covered += nodesInLevel;
+            nodesInLevel <<= 1;
+            depth++;
+        }
+        return Math.max(1, depth);
+    }
+
+    private void applyCycleLayout(Graph graph) {
+        List<Integer> ids = new ArrayList<>(graph.getNodeIds());
+        Collections.sort(ids);
+        layoutNodesOnCircle(graph, ids, 460, 340, 250, -Math.PI / 2.0);
+    }
+
+    private void applyPathLayout(Graph graph) {
+        List<Integer> ids = new ArrayList<>(graph.getNodeIds());
+        Collections.sort(ids);
+        if (ids.isEmpty()) {
+            return;
+        }
+
+        int columns = Math.min(10, Math.max(2, ids.size()));
+        double startX = 100;
+        double startY = 140;
+        double stepX = 85;
+        double stepY = 95;
+
+        for (int i = 0; i < ids.size(); i++) {
+            int row = i / columns;
+            int col = i % columns;
+            if (row % 2 == 1) {
+                col = columns - 1 - col;
+            }
+
+            setNodePosition(
+                graph,
+                ids.get(i),
+                startX + col * stepX,
+                startY + row * stepY
+            );
+        }
+    }
+
+    private void applyWheelLayout(Graph graph, int n) {
+        if (n < 4) {
+            applyCycleLayout(graph);
+            return;
+        }
+
+        int centerId = n - 1;
+        setNodePosition(graph, centerId, 460, 340);
+
+        List<Integer> rimIds = new ArrayList<>();
+        for (int i = 0; i < n - 1; i++) {
+            rimIds.add(i);
+        }
+        layoutNodesOnCircle(graph, rimIds, 460, 340, 250, -Math.PI / 2.0);
+    }
+
+    private void applyPrismLayout(Graph graph, int n) {
+        List<Integer> top = new ArrayList<>();
+        List<Integer> bottom = new ArrayList<>();
+        for (int i = 0; i < n; i++) {
+            top.add(i);
+            bottom.add(i + n);
+        }
+
+        layoutNodesOnCircle(graph, top, 410, 280, 170, -Math.PI / 2.0);
+        layoutNodesOnCircle(graph, bottom, 530, 400, 170, -Math.PI / 2.0);
+    }
+
+    private void applyGeneralizedPetersenLayout(Graph graph, int n) {
+        List<Integer> outer = new ArrayList<>();
+        List<Integer> inner = new ArrayList<>();
+        for (int i = 0; i < n; i++) {
+            outer.add(i);
+            inner.add(i + n);
+        }
+
+        layoutNodesOnCircle(graph, outer, 460, 340, 250, -Math.PI / 2.0);
+        layoutNodesOnCircle(graph, inner, 460, 340, 130, -Math.PI / 2.0);
+    }
+
+    private void applyCirculantLayout(Graph graph) {
+        List<Integer> ids = new ArrayList<>(graph.getNodeIds());
+        Collections.sort(ids);
+        layoutNodesOnCircle(graph, ids, 460, 340, 250, -Math.PI / 2.0);
+    }
+
+    private void applyHypercubeLayout(Graph graph, int dimension) {
+        if (dimension <= 0) {
+            return;
+        }
+
+        if (dimension == 1) {
+            setNodePosition(graph, 0, 320, 340);
+            setNodePosition(graph, 1, 600, 340);
+            return;
+        }
+
+        if (dimension == 2) {
+            applySquare(graph, 0, 460, 340, 300);
+            return;
+        }
+
+        if (dimension == 3) {
+            applyCube(graph, 0, 450, 350, 230, 75, 55);
+            return;
+        }
+
+        if (dimension == 4) {
+            applyCube(graph, 0, 360, 300, 170, 55, 40);
+            applyCube(graph, 8, 560, 430, 170, 55, 40);
+            return;
+        }
+
+        applyProjectedHypercube(graph, dimension);
+    }
+
+    private void applySquare(Graph graph, int baseId, double cx, double cy, double side) {
+        double h = side / 2.0;
+        setNodePosition(graph, baseId, cx - h, cy - h);
+        setNodePosition(graph, baseId + 1, cx - h, cy + h);
+        setNodePosition(graph, baseId + 3, cx + h, cy + h);
+        setNodePosition(graph, baseId + 2, cx + h, cy - h);
+    }
+
+    private void applyCube(Graph graph, int baseId, double cx, double cy, double side, double dx, double dy) {
+        applySquare(graph, baseId, cx, cy, side);
+
+        double h = side / 2.0;
+        setNodePosition(graph, baseId + 4, cx - h + dx, cy - h - dy);
+        setNodePosition(graph, baseId + 5, cx - h + dx, cy + h - dy);
+        setNodePosition(graph, baseId + 7, cx + h + dx, cy + h - dy);
+        setNodePosition(graph, baseId + 6, cx + h + dx, cy - h - dy);
+    }
+
+    private void applyProjectedHypercube(Graph graph, int dimension) {
+        int nodeCount = 1 << dimension;
+        double[] xs = new double[nodeCount];
+        double[] ys = new double[nodeCount];
+        double maxRadius = 1e-9;
+
+        for (int id = 0; id < nodeCount; id++) {
+            double x = 0;
+            double y = 0;
+            for (int bit = 0; bit < dimension; bit++) {
+                if ((id & (1 << bit)) != 0) {
+                    double angle = -Math.PI / 2.0 + 2.0 * Math.PI * bit / dimension;
+                    double weight = 1.0 + 0.18 * bit;
+                    x += weight * Math.cos(angle);
+                    y += weight * Math.sin(angle);
+                }
+            }
+            xs[id] = x;
+            ys[id] = y;
+            maxRadius = Math.max(maxRadius, Math.max(Math.abs(x), Math.abs(y)));
+        }
+
+        double cx = 460;
+        double cy = 340;
+        double scale = 260.0 / maxRadius;
+
+        for (int id = 0; id < nodeCount; id++) {
+            setNodePosition(graph, id, cx + xs[id] * scale, cy + ys[id] * scale);
+        }
+    }
+
+    private void applyGridLayout(Graph graph, int rows, int cols) {
+        if (rows <= 0 || cols <= 0) {
+            return;
+        }
+
+        double startX = 100;
+        double startY = 100;
+        double stepX = Math.min(130, 720.0 / Math.max(1, cols - 1));
+        double stepY = Math.min(130, 520.0 / Math.max(1, rows - 1));
+
+        for (int r = 0; r < rows; r++) {
+            for (int c = 0; c < cols; c++) {
+                int id = r * cols + c;
+                setNodePosition(graph, id, startX + c * stepX, startY + r * stepY);
+            }
+        }
+    }
+
+    private void layoutNodesOnLine(Graph graph, List<Integer> ids, double minX, double maxX, double y) {
+        if (ids == null || ids.isEmpty()) {
+            return;
+        }
+
+        int count = ids.size();
+        for (int i = 0; i < count; i++) {
+            double x = count == 1
+                ? (minX + maxX) / 2.0
+                : minX + (maxX - minX) * i / (count - 1.0);
+            setNodePosition(graph, ids.get(i), x, y);
+        }
+    }
+
+    private void layoutNodesOnCircle(
+        Graph graph,
+        List<Integer> ids,
+        double cx,
+        double cy,
+        double radius,
+        double startAngle
+    ) {
+        if (ids == null || ids.isEmpty()) {
+            return;
+        }
+
+        int count = ids.size();
+        for (int i = 0; i < count; i++) {
+            double angle = startAngle + 2.0 * Math.PI * i / count;
+            setNodePosition(
+                graph,
+                ids.get(i),
+                cx + radius * Math.cos(angle),
+                cy + radius * Math.sin(angle)
+            );
+        }
+    }
+
+    private void setNodePosition(Graph graph, int nodeId, double x, double y) {
+        GraphNode node = graph.getNode(nodeId);
+        if (node == null) {
+            return;
+        }
+        node.setX(x);
+        node.setY(y);
+        node.setVx(0);
+        node.setVy(0);
+    }
+
     private VBox createGraphInfoSection() {
         VBox sec = section();
 
@@ -697,8 +1041,9 @@ public class ControlPanel extends VBox {
         nodeCountLabel.setText("Node: " + g.getNodeCount());
         edgeCountLabel.setText("Edge: " + g.getEdgeCount());
         if (startVtx >= 0) {
-            startVertexLabel.setText("Start Vertex (dari file): " + startVtx);
-            startNodeField.setText(String.valueOf(startVtx));
+            String label = formatNodeId(startVtx, g);
+            startVertexLabel.setText("Start Vertex (dari file): " + label);
+            startNodeField.setText(label);
         } else {
             startVertexLabel.setText("Start Vertex: -");
         }
@@ -713,14 +1058,171 @@ public class ControlPanel extends VBox {
             updateGraphInfo(new Graph(), -1);
             return;
         }
-        GraphParser.ParseResult result = GraphParser.parseEdgeListWithStart(text, directedCb.isSelected(), weightedCb.isSelected());
+
+        GraphParser.ParseResult result;
+        if (isCoordinateInputMode()) {
+            result = GraphParser.parseTspCoordinates(text);
+        } else {
+            result = GraphParser.parseEdgeListWithStart(
+                text,
+                directedCb.isSelected(),
+                weightedCb.isSelected()
+            );
+        }
+
         Graph g = result.getGraph();
         parsedStartVertex = result.getStartVertex();
-        if (g.getNodeCount() > 0) {
-            canvas.setGraph(g);
+
+        GraphLayoutPresetApplier layoutApplier = null;
+        if (!result.hasFixedCoordinates() && g.getNodeCount() > 0) {
+            layoutApplier = pendingPresetLayout;
+            if (layoutApplier == null && !isCoordinateInputMode()) {
+                BipartitePartition partition = computeBipartitePartition(g);
+                if (partition != null) {
+                    layoutApplier = graph -> applyBipartiteLayout(graph, partition);
+                }
+            }
+        }
+
+        canvas.setGraph(g, result.hasFixedCoordinates());
+
+        if (layoutApplier != null) {
+            layoutApplier.apply(canvas.getGraph());
+            canvas.draw();
+        } else if (g.getNodeCount() > 0 && !result.hasFixedCoordinates()) {
             canvas.startLayout();
         }
+
+        pendingPresetLayout = null;
+
         updateGraphInfo(g, parsedStartVertex);
+    }
+
+    private void applyBipartiteLayout(Graph graph, BipartitePartition partition) {
+        List<Integer> left = new ArrayList<>(partition.left);
+        List<Integer> right = new ArrayList<>(partition.right);
+        sortByLabel(left, graph);
+        sortByLabel(right, graph);
+
+        layoutNodesOnLine(graph, left, 120, 820, 200);
+        layoutNodesOnLine(graph, right, 120, 820, 520);
+    }
+
+    private void sortByLabel(List<Integer> nodes, Graph graph) {
+        nodes.sort((a, b) -> {
+            String la = formatNodeId(a, graph);
+            String lb = formatNodeId(b, graph);
+            int cmp = la.compareToIgnoreCase(lb);
+            if (cmp != 0) return cmp;
+            return Integer.compare(a, b);
+        });
+    }
+
+    private BipartitePartition computeBipartitePartition(Graph graph) {
+        Map<Integer, Integer> color = new HashMap<>();
+        List<Integer> left = new ArrayList<>();
+        List<Integer> right = new ArrayList<>();
+
+        List<Integer> ids = new ArrayList<>(graph.getNodeIds());
+        Collections.sort(ids);
+
+        for (int start : ids) {
+            if (color.containsKey(start)) {
+                continue;
+            }
+            Queue<Integer> queue = new ArrayDeque<>();
+            queue.add(start);
+            color.put(start, 0);
+            left.add(start);
+
+            while (!queue.isEmpty()) {
+                int u = queue.poll();
+                int uColor = color.get(u);
+                for (int v : graph.getNeighbors(u)) {
+                    if (!color.containsKey(v)) {
+                        int vColor = 1 - uColor;
+                        color.put(v, vColor);
+                        if (vColor == 0) {
+                            left.add(v);
+                        } else {
+                            right.add(v);
+                        }
+                        queue.add(v);
+                    } else if (color.get(v).equals(uColor)) {
+                        return null;
+                    }
+                }
+            }
+        }
+
+        return new BipartitePartition(left, right);
+    }
+
+    private Integer resolveNodeInput(String input, Graph graph) {
+        if (graph == null || input.isEmpty()) {
+            return null;
+        }
+        try {
+            int numeric = Integer.parseInt(input);
+            if (graph.getNode(numeric) != null) {
+                return numeric;
+            }
+        } catch (NumberFormatException ex) {
+            // ignore
+        }
+
+        GraphNode fallback = null;
+        for (GraphNode node : graph.getNodes()) {
+            if (input.equals(node.getLabel())) {
+                return node.getId();
+            }
+        }
+        for (GraphNode node : graph.getNodes()) {
+            if (node.getLabel() != null && node.getLabel().equalsIgnoreCase(input)) {
+                if (fallback != null) {
+                    return null;
+                }
+                fallback = node;
+            }
+        }
+        return fallback != null ? fallback.getId() : null;
+    }
+
+    private static final class BipartitePartition {
+        private final List<Integer> left;
+        private final List<Integer> right;
+
+        private BipartitePartition(List<Integer> left, List<Integer> right) {
+            this.left = left;
+            this.right = right;
+        }
+    }
+
+    private boolean isCoordinateInputMode() {
+        return INPUT_MODE_TSP_COORDINATES.equals(inputModeCombo.getValue());
+    }
+
+    private void applyInputModeSettings() {
+        boolean coordinateMode = isCoordinateInputMode();
+
+        directedCb.setDisable(coordinateMode);
+        weightedCb.setDisable(coordinateMode);
+
+        if (coordinateMode) {
+            directedCb.setSelected(false);
+            weightedCb.setSelected(true);
+            graphInputArea.setPromptText(
+                "Format koordinat TSP:\n"
+                    + "5\n"
+                    + "1 3\n"
+                    + "2 4\n"
+                    + "8 9\n"
+                    + "2 0\n"
+                    + "-2 4"
+            );
+        } else {
+            graphInputArea.setPromptText("Masukkan input");
+        }
     }
 
     private void loadFromFile() {
@@ -730,8 +1232,27 @@ public class ControlPanel extends VBox {
             File dataDir = resolveDataDir();
             String content = GraphParser.readFileText(
                 new File(dataDir, selected).getAbsolutePath());
-            graphInputArea.setText(content.replace("\r\n", "\n").replace("\r", "\n"));
+
+            String normalized = content.replace("\r\n", "\n").replace("\r", "\n");
+            if (GraphParser.isTspCoordinateFormat(normalized)) {
+                pendingPresetLayout = null;
+                inputModeCombo.setValue(INPUT_MODE_TSP_COORDINATES);
+            } else {
+                pendingPresetLayout = null;
+                inputModeCombo.setValue(INPUT_MODE_EDGE_LIST);
+            }
+            applyInputModeSettings();
+
+            programmaticInputChange = true;
+            try {
+                graphInputArea.setText(normalized);
+            } finally {
+                programmaticInputChange = false;
+            }
+            autoLoadDebounce.stop();
+            autoLoadGraph();
         } catch (Exception ex) {
+            programmaticInputChange = false;
             warn("Gagal membaca file: " + ex.getMessage());
         }
     }
@@ -763,6 +1284,8 @@ public class ControlPanel extends VBox {
             warn("Masukkan graf terlebih dahulu."); return;
         }
 
+        Graph graph = canvas.getGraph();
+
         Map<String, Object> params = new HashMap<>();
         for (ParameterInfo p : currentAlgorithm.getRequiredParameters()) {
             Control ctrl = paramControls.get(p.getKey());
@@ -771,10 +1294,18 @@ public class ControlPanel extends VBox {
                 if (txt.isEmpty() && p.isRequired()) {
                     warn("Parameter '" + p.getLabel() + "' wajib diisi."); return;
                 }
-                try {
-                    params.put(p.getKey(), Integer.parseInt(txt));
-                } catch (NumberFormatException ex) {
-                    warn("Parameter '" + p.getLabel() + "' harus angka."); return;
+                if (p.getType() == ParameterInfo.Type.NODE_SELECT) {
+                    Integer nodeId = resolveNodeInput(txt, graph);
+                    if (nodeId == null) {
+                        warn("Node '" + txt + "' tidak ditemukan."); return;
+                    }
+                    params.put(p.getKey(), nodeId);
+                } else {
+                    try {
+                        params.put(p.getKey(), Integer.parseInt(txt));
+                    } catch (NumberFormatException ex) {
+                        warn("Parameter '" + p.getLabel() + "' harus angka."); return;
+                    }
                 }
             } else if (ctrl instanceof CheckBox) {
                 params.put(p.getKey(), ((CheckBox) ctrl).isSelected());
@@ -785,16 +1316,18 @@ public class ControlPanel extends VBox {
         AlgorithmResult result = currentAlgorithm.execute(canvas.getGraph(), params);
         simulation.loadResult(result);
 
+        Map<String, Object> resData = result.getData();
+        String summaryText = buildResultSummaryText(result, resData, graph);
+
         // Tampilkan hasil di bottom result panel
-        resultPanel.setSummary(result.getSummary());
+        resultPanel.setSummary(summaryText);
         resultPanel.clearActions();
 
         // Tampilkan hasil di right-panel result section
-        resultSummaryLabel.setText(result.getSummary());
+        resultSummaryLabel.setText(summaryText);
         resultActionPane.getChildren().clear();
 
-        Map<String, Object> resData = result.getData();
-        resultPanel.setDetail(buildResultDetailText(resData));
+        resultPanel.setDetail(buildResultDetailText(resData, graph));
 
         // Bipartite actions
         if (resData.containsKey("bipartite")) {
@@ -818,10 +1351,10 @@ public class ControlPanel extends VBox {
     }
 
     @SuppressWarnings("unchecked")
-    private String buildResultDetailText(Map<String, Object> resData) {
+    private String buildResultDetailText(Map<String, Object> resData, Graph graph) {
         List<Integer> order = (List<Integer>) resData.get("traversalOrder");
         if (order != null && !order.isEmpty()) {
-            return "Traversal: " + formatNodePath(order);
+            return "Traversal: " + formatNodePath(order, graph);
         }
 
         List<Integer> path = (List<Integer>) resData.get("shortestPath");
@@ -837,11 +1370,28 @@ public class ControlPanel extends VBox {
             if (distanceObj instanceof Number) {
                 double distance = ((Number) distanceObj).doubleValue();
                 if (Double.isFinite(distance)) {
-                    return "Path: " + formatNodePath(path)
+                    return "Path: " + formatNodePath(path, graph)
                         + " | Total Bobot: " + formatWeight(distance);
                 }
             }
-            return "Path: " + formatNodePath(path);
+            return "Path: " + formatNodePath(path, graph);
+        }
+
+        List<List<Integer>> matchingEdges = (List<List<Integer>>) resData.get("matchingEdges");
+        if (matchingEdges != null) {
+            Object sizeObj = resData.get("matchingSize");
+            int size = sizeObj instanceof Number ? ((Number) sizeObj).intValue() : matchingEdges.size();
+            String pairs = matchingEdges.isEmpty()
+                ? "(kosong)"
+                : formatMatchingEdges(matchingEdges, graph);
+            return "Matching size: " + size + " | Pairs: " + pairs;
+        }
+
+        List<List<List<Integer>>> timetable = (List<List<List<Integer>>>) resData.get("timetable");
+        if (timetable != null) {
+            Object periodObj = resData.get("periodCount");
+            int periods = periodObj instanceof Number ? ((Number) periodObj).intValue() : timetable.size();
+            return formatTimetable(timetable, periods, graph);
         }
 
         List<List<Integer>> mstEdges = (List<List<Integer>>) resData.get("mstEdges");
@@ -849,22 +1399,33 @@ public class ControlPanel extends VBox {
             Object totalWeightObj = resData.get("mstWeight");
             if (totalWeightObj instanceof Number) {
                 double totalWeight = ((Number) totalWeightObj).doubleValue();
-                return "MST: " + formatMstEdges(mstEdges)
+                return "MST: " + formatMstEdges(mstEdges, graph)
                     + " | Total Bobot: " + formatWeight(totalWeight);
             }
-            return "MST: " + formatMstEdges(mstEdges);
+            return "MST: " + formatMstEdges(mstEdges, graph);
         }
 
         return "";
     }
 
-    private String formatNodePath(List<Integer> nodes) {
+    private String formatNodePath(List<Integer> nodes, Graph graph) {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < nodes.size(); i++) {
             if (i > 0) sb.append(" \u2192 ");
-            sb.append(nodes.get(i));
+            sb.append(formatNodeId(nodes.get(i), graph));
         }
         return sb.toString();
+    }
+
+    private String formatNodeId(int nodeId, Graph graph) {
+        if (graph == null) {
+            return String.valueOf(nodeId);
+        }
+        GraphNode node = graph.getNode(nodeId);
+        if (node != null && node.getLabel() != null) {
+            return node.getLabel();
+        }
+        return String.valueOf(nodeId);
     }
 
     private String formatWeight(double value) {
@@ -874,22 +1435,160 @@ public class ControlPanel extends VBox {
         return String.format(Locale.US, "%.2f", value);
     }
 
+    private String formatMatchingEdges(List<List<Integer>> edges, Graph graph) {
+        StringBuilder sb = new StringBuilder();
+        for (List<Integer> edge : edges) {
+            if (edge == null || edge.size() < 2) continue;
+            if (sb.length() > 0) sb.append(", ");
+            sb.append(formatNodeId(edge.get(0), graph))
+                .append("-")
+                .append(formatNodeId(edge.get(1), graph));
+        }
+        return sb.toString();
+    }
+
+    private String formatTimetable(List<List<List<Integer>>> timetable, int periods, Graph graph) {
+        StringBuilder sb = new StringBuilder();
+        int limit = Math.min(periods, timetable.size());
+        for (int i = 0; i < limit; i++) {
+            if (i > 0) sb.append("\n");
+            sb.append("P").append(i + 1).append(": ");
+            sb.append(formatMatchingEdges(timetable.get(i), graph));
+        }
+        return sb.toString();
+    }
+
+    private String formatMstEdges(List<List<Integer>> edges, Graph graph) {
+        StringBuilder sb = new StringBuilder();
+        for (List<Integer> edge : edges) {
+            if (edge == null || edge.size() < 2) continue;
+            if (sb.length() > 0) sb.append(", ");
+            sb.append(formatNodeId(edge.get(0), graph))
+                .append("-")
+                .append(formatNodeId(edge.get(1), graph));
+        }
+        return sb.toString();
+    }
+
+    private String formatNodeList(List<Integer> nodes, Graph graph) {
+        StringBuilder sb = new StringBuilder("[");
+        for (int i = 0; i < nodes.size(); i++) {
+            if (i > 0) sb.append(", ");
+            sb.append(formatNodeId(nodes.get(i), graph));
+        }
+        sb.append("]");
+        return sb.toString();
+    }
+
+    private String buildResultSummaryText(AlgorithmResult result, Map<String, Object> resData, Graph graph) {
+        String summary = result.getSummary();
+
+        List<Integer> order = safeNodeList(resData.get("traversalOrder"));
+        if (order != null && !order.isEmpty()) {
+            return "Traversal: " + formatNodePath(order, graph);
+        }
+
+        List<Integer> path = safeNodeList(resData.get("shortestPath"));
+        if (path == null || path.isEmpty()) {
+            path = safeNodeList(resData.get("path"));
+        }
+        if (path != null && !path.isEmpty()) {
+            Object distanceObj = resData.containsKey("shortestDistance")
+                ? resData.get("shortestDistance")
+                : resData.get("distance");
+            if (distanceObj instanceof Number) {
+                double distance = ((Number) distanceObj).doubleValue();
+                if (Double.isFinite(distance)) {
+                    return "Path: " + formatNodePath(path, graph)
+                        + " | Total Bobot: " + formatWeight(distance);
+                }
+            }
+            return "Path: " + formatNodePath(path, graph);
+        }
+
+        List<List<Integer>> matchingEdges = safeEdgeList(resData.get("matchingEdges"));
+        if (matchingEdges != null) {
+            Object sizeObj = resData.get("matchingSize");
+            int size = sizeObj instanceof Number ? ((Number) sizeObj).intValue() : matchingEdges.size();
+            String pairs = matchingEdges.isEmpty()
+                ? "(kosong)"
+                : formatMatchingEdges(matchingEdges, graph);
+            return "Matching size: " + size + " | Pairs: " + pairs;
+        }
+
+        List<List<List<Integer>>> timetable = safeTimetable(resData.get("timetable"));
+        if (timetable != null) {
+            Object periodObj = resData.get("periodCount");
+            int periods = periodObj instanceof Number ? ((Number) periodObj).intValue() : timetable.size();
+            return formatTimetable(timetable, periods, graph);
+        }
+
+        List<List<Integer>> mstEdges = safeEdgeList(resData.get("mstEdges"));
+        if (mstEdges != null && !mstEdges.isEmpty()) {
+            Object totalWeightObj = resData.get("mstWeight");
+            if (totalWeightObj instanceof Number) {
+                double totalWeight = ((Number) totalWeightObj).doubleValue();
+                return "MST: " + formatMstEdges(mstEdges, graph)
+                    + " | Total Bobot: " + formatWeight(totalWeight);
+            }
+            return "MST: " + formatMstEdges(mstEdges, graph);
+        }
+
+        Boolean bipartite = (Boolean) resData.get("bipartite");
+        if (Boolean.TRUE.equals(bipartite)) {
+            List<Integer> setA = safeNodeList(resData.get("setA"));
+            List<Integer> setB = safeNodeList(resData.get("setB"));
+            if (setA != null && setB != null) {
+                return "Graf bipartit. A=" + formatNodeList(setA, graph)
+                    + " | B=" + formatNodeList(setB, graph);
+            }
+        }
+
+        return summary;
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<Integer> safeNodeList(Object value) {
+        if (value instanceof List) {
+            return (List<Integer>) value;
+        }
+        return null;
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<List<Integer>> safeEdgeList(Object value) {
+        if (value instanceof List) {
+            return (List<List<Integer>>) value;
+        }
+        return null;
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<List<List<Integer>>> safeTimetable(Object value) {
+        if (value instanceof List) {
+            return (List<List<List<Integer>>>) value;
+        }
+        return null;
+    }
+
     // Right panel results
     @SuppressWarnings("unchecked")
     private void addBipartiteButtons(Map<String, Object> data) {
         boolean bipartite = (Boolean) data.getOrDefault("bipartite", false);
         if (!bipartite) return;
 
+        Graph graph = canvas.getGraph();
+
         List<Integer> setA = (List<Integer>) data.get("setA");
         List<Integer> setB = (List<Integer>) data.get("setB");
 
         if (setA != null && !setA.isEmpty()) {
-            Button btnA = smallBtn("Highlight A " + setA, "#1565C0");
+            Button btnA = smallBtn("Highlight A " + formatNodeList(setA, graph), "#1565C0");
             btnA.setOnAction(e -> highlightNodes(setA, NodeState.COMPONENT_1));
             resultActionPane.getChildren().add(btnA);
         }
         if (setB != null && !setB.isEmpty()) {
-            Button btnB = smallBtn("Highlight B " + setB, "#E65100");
+            Button btnB = smallBtn("Highlight B " + formatNodeList(setB, graph), "#E65100");
             btnB.setOnAction(e -> highlightNodes(setB, NodeState.COMPONENT_2));
             resultActionPane.getChildren().add(btnB);
         }
@@ -965,13 +1664,7 @@ public class ControlPanel extends VBox {
     }
 
     private String formatMstEdges(List<List<Integer>> edges) {
-        StringBuilder sb = new StringBuilder();
-        for (List<Integer> edge : edges) {
-            if (edge == null || edge.size() < 2) continue;
-            if (sb.length() > 0) sb.append(", ");
-            sb.append(edge.get(0)).append("-").append(edge.get(1));
-        }
-        return sb.toString();
+        return formatMstEdges(edges, canvas.getGraph());
     }
 
     // UI helper builder

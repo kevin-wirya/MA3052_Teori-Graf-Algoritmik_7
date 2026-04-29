@@ -1,6 +1,7 @@
 package com.grafapp.util;
 
 import com.grafapp.model.Graph;
+import com.grafapp.model.GraphNode;
 import java.io.*;
 import java.nio.file.*;
 import java.util.*;
@@ -13,15 +14,22 @@ public class GraphParser {
     public static class ParseResult {
         private final Graph graph;
         private final int startVertex;
+        private final boolean fixedCoordinates;
 
         public ParseResult(Graph graph, int startVertex) {
+            this(graph, startVertex, false);
+        }
+
+        public ParseResult(Graph graph, int startVertex, boolean fixedCoordinates) {
             this.graph = graph;
             this.startVertex = startVertex;
+            this.fixedCoordinates = fixedCoordinates;
         }
 
         public Graph getGraph() { return graph; }
         public int getStartVertex() { return startVertex; }
         public boolean hasStartVertex() { return startVertex >= 0; }
+        public boolean hasFixedCoordinates() { return fixedCoordinates; }
     }
 
     /**
@@ -38,17 +46,10 @@ public class GraphParser {
     public static ParseResult parseEdgeListWithStart(String text, boolean directed, boolean weighted) {
         Graph graph = new Graph(directed);
         graph.setWeighted(weighted);
-        String[] lines = text.split("\\n");
         int startVertex = -1;
 
         // Kumpulkan baris non-kosong non-komentar
-        List<String> dataLines = new ArrayList<>();
-        for (String line : lines) {
-            String trimmed = line.trim();
-            if (!trimmed.isEmpty() && !trimmed.startsWith("#") && !trimmed.startsWith("//")) {
-                dataLines.add(trimmed);
-            }
-        }
+        List<String> dataLines = collectDataLines(text);
 
         if (dataLines.isEmpty()) return new ParseResult(graph, -1);
 
@@ -87,6 +88,37 @@ public class GraphParser {
         }
 
         // Fallback: plain edge list tanpa header
+        boolean labelMode = requiresLabelMapping(dataLines);
+        if (labelMode) {
+            Map<String, Integer> labelToId = new LinkedHashMap<>();
+            for (String line : dataLines) {
+                String[] parts = line.split("[\\s,;]+");
+                if (parts.length >= 2) {
+                    if (isTimetableMetadata(parts)) {
+                        continue;
+                    }
+                    int u = getOrCreateLabelId(parts[0], labelToId, graph);
+                    int v = getOrCreateLabelId(parts[1], labelToId, graph);
+                    if (weighted && parts.length >= 3) {
+                        try {
+                            double w = Double.parseDouble(parts[2]);
+                            graph.addEdge(u, v, w);
+                        } catch (NumberFormatException e) {
+                            graph.addEdge(u, v);
+                        }
+                    } else {
+                        graph.addEdge(u, v);
+                    }
+                } else if (parts.length == 1) {
+                    if (isTimetableMetadata(parts)) {
+                        continue;
+                    }
+                    getOrCreateLabelId(parts[0], labelToId, graph);
+                }
+            }
+            return new ParseResult(graph, -1);
+        }
+
         for (String line : dataLines) {
             String[] parts = line.split("[\\s,;]+");
             if (parts.length >= 2) {
@@ -98,6 +130,142 @@ public class GraphParser {
             }
         }
         return new ParseResult(graph, -1);
+    }
+
+    /**
+     * Parse format koordinat untuk TSP.
+     * Format:
+     *   Baris 1: n (jumlah titik)
+     *   Baris 2..n+1: "x y" (koordinat titik)
+     *
+     * Node ID akan dibuat berurutan dari 0..n-1.
+     * Edge lengkap otomatis dibentuk dengan bobot jarak Euclidean.
+     */
+    public static ParseResult parseTspCoordinates(String text) {
+        Graph graph = createEmptyCoordinateGraph();
+
+        List<String> dataLines = collectDataLines(text);
+
+        if (dataLines.isEmpty()) {
+            return new ParseResult(graph, -1, true);
+        }
+
+        String[] header = dataLines.get(0).split("[\\s,;]+");
+        if (header.length != 1) {
+            return new ParseResult(graph, -1, true);
+        }
+
+        int nodeCount;
+        try {
+            nodeCount = Integer.parseInt(header[0]);
+        } catch (NumberFormatException ex) {
+            return new ParseResult(graph, -1, true);
+        }
+
+        if (nodeCount <= 0 || dataLines.size() < nodeCount + 1) {
+            return new ParseResult(graph, -1, true);
+        }
+
+        List<GraphNode> orderedNodes = new ArrayList<>();
+        for (int i = 0; i < nodeCount; i++) {
+            String[] parts = dataLines.get(i + 1).split("[\\s,;]+");
+            if (parts.length < 2) {
+                return new ParseResult(createEmptyCoordinateGraph(), -1, true);
+            }
+
+            double x;
+            double y;
+            try {
+                x = Double.parseDouble(parts[0]);
+                y = Double.parseDouble(parts[1]);
+            } catch (NumberFormatException ex) {
+                return new ParseResult(createEmptyCoordinateGraph(), -1, true);
+            }
+
+            GraphNode node = new GraphNode(i);
+            node.setCoordinate(x, y);
+            node.setX(x);
+            node.setY(y);
+            node.setPinned(true);
+            graph.addNode(node);
+            orderedNodes.add(node);
+        }
+
+        for (int i = 0; i < orderedNodes.size(); i++) {
+            for (int j = i + 1; j < orderedNodes.size(); j++) {
+                GraphNode a = orderedNodes.get(i);
+                GraphNode b = orderedNodes.get(j);
+                double distance = Math.hypot(
+                    a.getCoordinateX() - b.getCoordinateX(),
+                    a.getCoordinateY() - b.getCoordinateY()
+                );
+                graph.addEdge(a.getId(), b.getId(), distance);
+            }
+        }
+
+        return new ParseResult(graph, 0, true);
+    }
+
+    /**
+     * Cek apakah teks kemungkinan besar memakai format koordinat TSP.
+     * Valid jika:
+     *   - Baris pertama hanya berisi satu integer n > 0
+     *   - Ada tepat n baris koordinat setelahnya
+     *   - Tiap baris koordinat berisi minimal dua angka (x y)
+     */
+    public static boolean isTspCoordinateFormat(String text) {
+        List<String> dataLines = collectDataLines(text);
+        if (dataLines.size() < 2) {
+            return false;
+        }
+
+        String[] header = dataLines.get(0).split("[\\s,;]+");
+        if (header.length != 1) {
+            return false;
+        }
+
+        int nodeCount;
+        try {
+            nodeCount = Integer.parseInt(header[0]);
+        } catch (NumberFormatException ex) {
+            return false;
+        }
+
+        if (nodeCount <= 0 || dataLines.size() != nodeCount + 1) {
+            return false;
+        }
+
+        for (int i = 1; i <= nodeCount; i++) {
+            String[] parts = dataLines.get(i).split("[\\s,;]+");
+            if (parts.length < 2) {
+                return false;
+            }
+            try {
+                Double.parseDouble(parts[0]);
+                Double.parseDouble(parts[1]);
+            } catch (NumberFormatException ex) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static Graph createEmptyCoordinateGraph() {
+        Graph graph = new Graph(false);
+        graph.setWeighted(true);
+        return graph;
+    }
+
+    private static List<String> collectDataLines(String text) {
+        List<String> dataLines = new ArrayList<>();
+        for (String line : text.split("\\n")) {
+            String trimmed = line.trim();
+            if (!trimmed.isEmpty() && !trimmed.startsWith("#") && !trimmed.startsWith("//")) {
+                dataLines.add(trimmed);
+            }
+        }
+        return dataLines;
     }
 
     /**
@@ -120,6 +288,53 @@ public class GraphParser {
                 graph.addEdge(u, v);
             }
         } catch (NumberFormatException e) { /* skip */ }
+    }
+
+    private static boolean requiresLabelMapping(List<String> dataLines) {
+        for (String line : dataLines) {
+            String[] parts = line.split("[\\s,;]+");
+            if (parts.length == 0) {
+                continue;
+            }
+            if (isTimetableMetadata(parts)) {
+                continue;
+            }
+            int limit = Math.min(parts.length, 2);
+            for (int i = 0; i < limit; i++) {
+                if (!isIntegerToken(parts[i])) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private static boolean isIntegerToken(String token) {
+        try {
+            Integer.parseInt(token);
+            return true;
+        } catch (NumberFormatException ex) {
+            return false;
+        }
+    }
+
+    private static boolean isTimetableMetadata(String[] parts) {
+        return parts.length >= 2 && parts[0].equalsIgnoreCase("k") && isIntegerToken(parts[1]);
+    }
+
+    private static int getOrCreateLabelId(
+        String label,
+        Map<String, Integer> labelToId,
+        Graph graph
+    ) {
+        Integer existing = labelToId.get(label);
+        if (existing != null) {
+            return existing;
+        }
+        int id = labelToId.size();
+        labelToId.put(label, id);
+        graph.addNode(new GraphNode(id, label));
+        return id;
     }
 
     /**

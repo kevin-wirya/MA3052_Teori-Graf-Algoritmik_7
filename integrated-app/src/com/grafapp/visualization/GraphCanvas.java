@@ -5,7 +5,6 @@ import com.grafapp.layout.ForceDirectedLayout;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.TextInputDialog;
-import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.Pane;
@@ -17,6 +16,7 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.TextAlignment;
 import javafx.geometry.VPos;
+import java.util.Locale;
 
 public class GraphCanvas extends Pane {
 
@@ -25,6 +25,7 @@ public class GraphCanvas extends Pane {
     private final Canvas canvas;
     private Graph graph;
     private ForceDirectedLayout layout;
+    private boolean fixedCoordinateMode;
 
     // Transform (zoom & pan)
     private double zoom = 1.0;
@@ -51,19 +52,43 @@ public class GraphCanvas extends Pane {
         canvas.widthProperty().bind(widthProperty());
         canvas.heightProperty().bind(heightProperty());
 
-        widthProperty().addListener(e -> draw());
-        heightProperty().addListener(e -> draw());
+        widthProperty().addListener(e -> {
+            if (fixedCoordinateMode) {
+                fitCoordinatesToCanvas();
+            }
+            draw();
+        });
+        heightProperty().addListener(e -> {
+            if (fixedCoordinateMode) {
+                fitCoordinatesToCanvas();
+            }
+            draw();
+        });
 
         setupMouseHandlers();
     }
 
     // Public API
     public void setGraph(Graph graph) {
+        setGraph(graph, false);
+    }
+
+    public void setGraph(Graph graph, boolean fixedCoordinateMode) {
         this.graph = graph;
+        this.fixedCoordinateMode = fixedCoordinateMode;
         if (layout != null) layout.stop();
         layout = new ForceDirectedLayout(graph, getWidth(), getHeight());
         layout.setOnTick(this::draw);
-        layout.circularLayout();
+
+        if (fixedCoordinateMode) {
+            fitCoordinatesToCanvas();
+        } else {
+            layout.circularLayout();
+        }
+
+        zoom = 1.0;
+        panX = 0;
+        panY = 0;
         draw();
     }
 
@@ -76,6 +101,9 @@ public class GraphCanvas extends Pane {
     public void setOnGraphChanged(Runnable cb) { this.onGraphChanged = cb; }
 
     public void startLayout() {
+        if (fixedCoordinateMode) {
+            return;
+        }
         if (layout != null) {
             layout.setDimensions(getWidth(), getHeight());
             layout.start();
@@ -87,7 +115,9 @@ public class GraphCanvas extends Pane {
     }
 
     public void resetLayout() {
-        if (layout != null) {
+        if (fixedCoordinateMode) {
+            fitCoordinatesToCanvas();
+        } else if (layout != null) {
             layout.setDimensions(getWidth(), getHeight());
             layout.circularLayout();
         }
@@ -195,10 +225,57 @@ public class GraphCanvas extends Pane {
 
     private void handleMouseReleased(MouseEvent e) {
         if (draggedNode != null) {
-            draggedNode.setPinned(false);
+            draggedNode.setPinned(fixedCoordinateMode && draggedNode.hasCoordinate());
             draggedNode = null;
         }
         panning = false;
+    }
+
+    private void fitCoordinatesToCanvas() {
+        if (graph == null || graph.getNodeCount() == 0) {
+            return;
+        }
+
+        double width = getWidth() > 1 ? getWidth() : 600;
+        double height = getHeight() > 1 ? getHeight() : 400;
+        double margin = 80;
+        double drawWidth = Math.max(40, width - 2 * margin);
+        double drawHeight = Math.max(40, height - 2 * margin);
+
+        double minX = Double.POSITIVE_INFINITY;
+        double maxX = Double.NEGATIVE_INFINITY;
+        double minY = Double.POSITIVE_INFINITY;
+        double maxY = Double.NEGATIVE_INFINITY;
+
+        for (GraphNode node : graph.getNodes()) {
+            double rawX = node.hasCoordinate() ? node.getCoordinateX() : node.getX();
+            double rawY = node.hasCoordinate() ? node.getCoordinateY() : node.getY();
+
+            minX = Math.min(minX, rawX);
+            maxX = Math.max(maxX, rawX);
+            minY = Math.min(minY, rawY);
+            maxY = Math.max(maxY, rawY);
+        }
+
+        double spanX = maxX - minX;
+        double spanY = maxY - minY;
+
+        for (GraphNode node : graph.getNodes()) {
+            double rawX = node.hasCoordinate() ? node.getCoordinateX() : node.getX();
+            double rawY = node.hasCoordinate() ? node.getCoordinateY() : node.getY();
+
+            double normalizedX = spanX < 1e-9 ? 0.5 : (rawX - minX) / spanX;
+            double normalizedY = spanY < 1e-9 ? 0.5 : (rawY - minY) / spanY;
+
+            node.setX(margin + normalizedX * drawWidth);
+            // Inversi Y agar sesuai sumbu kartesius (nilai Y lebih besar tampil lebih atas).
+            node.setY(height - margin - normalizedY * drawHeight);
+            node.setVx(0);
+            node.setVy(0);
+            if (node.hasCoordinate()) {
+                node.setPinned(true);
+            }
+        }
     }
 
     private void handleScroll(ScrollEvent e) {
@@ -324,9 +401,7 @@ public class GraphCanvas extends Pane {
             double my = (src.getY() + tgt.getY()) / 2 - 10;
             // Background pill
             gc.setFill(Color.web("#FFFFFF", 0.85));
-            String wText = (edge.getWeight() == Math.floor(edge.getWeight()))
-                ? String.valueOf((int) edge.getWeight())
-                : String.valueOf(edge.getWeight());
+            String wText = formatNumber(edge.getWeight());
             double tw = wText.length() * 7 + 8;
             gc.fillRoundRect(mx - tw / 2, my - 8, tw, 16, 8, 8);
             gc.setStroke(Color.web("#D32F2F", 0.5));
@@ -393,5 +468,24 @@ public class GraphCanvas extends Pane {
         gc.setTextAlign(TextAlignment.CENTER);
         gc.setTextBaseline(VPos.CENTER);
         gc.fillText(node.getLabel(), x, y + 1);
+
+        if (fixedCoordinateMode && node.hasCoordinate()) {
+            gc.setFill(Color.web("#616161"));
+            gc.setFont(Font.font("Consolas", 10));
+            gc.setTextAlign(TextAlignment.CENTER);
+            gc.setTextBaseline(VPos.TOP);
+            gc.fillText(
+                "(" + formatNumber(node.getCoordinateX()) + ", " + formatNumber(node.getCoordinateY()) + ")",
+                x,
+                y + r + 5
+            );
+        }
+    }
+
+    private String formatNumber(double value) {
+        if (Math.abs(value - Math.rint(value)) < 1e-9) {
+            return String.valueOf((long) Math.rint(value));
+        }
+        return String.format(Locale.US, "%.2f", value);
     }
 }

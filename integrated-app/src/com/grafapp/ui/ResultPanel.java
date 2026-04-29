@@ -107,12 +107,12 @@ public class ResultPanel extends HBox {
         List<Integer> setB = (List<Integer>) data.get("setB");
 
         if (setA != null && !setA.isEmpty()) {
-            Button btnA = actionButton("Highlight Himpunan A " + setA, "#1565C0");
+            Button btnA = actionButton("Highlight Himpunan A " + formatNodeList(setA), "#1565C0");
             btnA.setOnAction(e -> highlightNodes(setA, NodeState.COMPONENT_1));
             actionPane.getChildren().add(btnA);
         }
         if (setB != null && !setB.isEmpty()) {
-            Button btnB = actionButton("Highlight Himpunan B " + setB, "#E65100");
+            Button btnB = actionButton("Highlight Himpunan B " + formatNodeList(setB), "#E65100");
             btnB.setOnAction(e -> highlightNodes(setB, NodeState.COMPONENT_2));
             actionPane.getChildren().add(btnB);
         }
@@ -212,10 +212,35 @@ public class ResultPanel extends HBox {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < cycle.size(); i++) {
             if (i > 0) sb.append("\u2192");
-            sb.append(cycle.get(i));
+            sb.append(formatNodeId(cycle.get(i)));
         }
-        sb.append("\u2192").append(cycle.get(0));
+        sb.append("\u2192").append(formatNodeId(cycle.get(0)));
         return sb.toString();
+    }
+
+    private String formatNodeList(List<Integer> nodes) {
+        StringBuilder sb = new StringBuilder("[");
+        for (int i = 0; i < nodes.size(); i++) {
+            if (i > 0) sb.append(", ");
+            sb.append(formatNodeId(nodes.get(i)));
+        }
+        sb.append("]");
+        return sb.toString();
+    }
+
+    private String formatNodeId(int nodeId) {
+        if (canvas == null) {
+            return String.valueOf(nodeId);
+        }
+        Graph graph = canvas.getGraph();
+        if (graph == null) {
+            return String.valueOf(nodeId);
+        }
+        GraphNode node = graph.getNode(nodeId);
+        if (node != null && node.getLabel() != null) {
+            return node.getLabel();
+        }
+        return String.valueOf(nodeId);
     }
 
     public void clear() {

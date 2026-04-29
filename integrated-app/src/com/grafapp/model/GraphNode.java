@@ -8,6 +8,8 @@ public class GraphNode {
     private final int id;
     private String label;
     private double x, y;
+    private double coordinateX, coordinateY;
+    private boolean hasCoordinate;
     private double vx, vy;
     private double fx, fy;
     private NodeState state = NodeState.UNVISITED;
@@ -31,6 +33,20 @@ public class GraphNode {
     public void setX(double x) { this.x = x; }
     public double getY() { return y; }
     public void setY(double y) { this.y = y; }
+
+    public void setCoordinate(double coordinateX, double coordinateY) {
+        this.coordinateX = coordinateX;
+        this.coordinateY = coordinateY;
+        this.hasCoordinate = true;
+    }
+
+    public boolean hasCoordinate() { return hasCoordinate; }
+    public double getCoordinateX() { return coordinateX; }
+    public double getCoordinateY() { return coordinateY; }
+
+    public void clearCoordinate() {
+        hasCoordinate = false;
+    }
 
     public double getVx() { return vx; }
     public void setVx(double vx) { this.vx = vx; }

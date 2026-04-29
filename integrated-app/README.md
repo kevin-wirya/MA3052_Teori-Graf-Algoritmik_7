@@ -74,9 +74,22 @@ launch.bat
 
 ## Cara Menggunakan
 
-1. **Input graf** di panel kanan via text area (format: edge list, satu edge per baris `u v` atau `u v w`)  
-    centang **Weighted** jika memakai bobot edge
-   atau klik **Sample** untuk contoh graf
+1. **Pilih Format Input** di panel kanan:
+   - **Edge List**: satu edge per baris `u v` atau `u v w`
+   - **TSP Coordinates**: format koordinat titik untuk membangun graf lengkap berbobot Euclidean secara otomatis
+
+     ```
+     5
+     1 3
+     2 4
+     8 9
+     2 0
+     -2 4
+     ```
+
+   Pada mode **TSP Coordinates**, node dibuat dari 0..n-1, edge antarpasangan titik dibuat otomatis, dan bobot edge dihitung dengan jarak Euclidean.
+   Jika memuat file `.txt` dari dropdown data, aplikasi akan **auto-detect** format koordinat ini dan otomatis memilih mode yang sesuai.
+
 2. **Pilih algoritma** dari sidebar kiri
 3. **Isi parameter** (misal: Start Node) di panel kanan
 4. Klik **Run Algorithm** — animasi otomatis berjalan
