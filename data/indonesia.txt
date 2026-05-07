@@ -1,0 +1,514 @@
+Aceh Selatan	3.1619	97.4365
+Aceh Tenggara	3.3689	97.6976
+Aceh Timur	4.6304	97.6261
+Aceh Tengah	4.5199	96.8813
+Aceh Barat	4.4545	96.1809
+Aceh Besar	5.3801	95.5152
+Pidie	5.0536	96.0334
+Aceh Utara	5.0156	97.1819
+Simeulue	2.6128	96.0863
+Aceh Singkil	2.3480	97.8451
+Bireuen	5.0938	96.6070
+Aceh Barat Daya	3.8226	96.8803
+Gayo Lues	3.9827	97.3601
+Aceh Jaya	4.8324	95.6781
+Nagan Raya	4.1642	96.5077
+Aceh Tamiang	4.2245	97.9830
+Bener Meriah	4.7701	97.0041
+Pidie Jaya	5.1247	96.2133
+Kota Banda Aceh	5.5587	95.3277
+Kota Sabang	5.8378	95.3057
+Kota Lhokseumawe	5.1653	97.1107
+Kota Langsa	4.4818	97.9806
+Kota Subulussalam	2.7307	97.9360
+Tapanuli Tengah	1.8360	98.6537
+Tapanuli Utara	2.0012	99.0651
+Tapanuli Selatan	1.5006	99.2670
+Nias	1.0699	97.7246
+Langkat	3.7088	98.2237
+Karo	3.1184	98.3014
+Deli Serdang	3.4803	98.6948
+Simalungun	2.9697	99.0216
+Asahan	2.8049	99.5594
+Labuhanbatu	2.2856	100.0616
+Dairi	2.8405	98.2792
+Toba	2.3890	99.2476
+Mandailing Natal	0.7764	99.3687
+Nias Selatan	0.3293	98.0989
+Pakpak Bharat	2.5494	98.2431
+Humbang Hasundutan	2.2612	98.5777
+Samosir	2.5623	98.7290
+Serdang Bedagai	3.3663	99.0577
+Batu Bara	3.2352	99.4726
+Padang Lawas Utara	1.5909	99.7630
+Padang Lawas	1.1423	99.8512
+Labuhanbatu Selatan	1.8419	100.1400
+Labuhanbatu Utara	2.4110	99.7578
+Nias Utara	1.3150	97.3554
+Nias Barat	1.0307	97.4912
+Kota Medan	3.6290	98.6672
+Kota Pematangsiantar	2.9614	99.0590
+Kota Sibolga	1.7425	98.7893
+Kota Tanjung Balai	2.9640	99.7947
+Kota Binjai	3.6002	98.4892
+Kota Tebing Tinggi	3.3283	99.1560
+Kota Padang Sidempuan	1.3908	99.2857
+Kota Gunungsitoli	1.2685	97.5867
+Pesisir Selatan	-1.7383	100.8793
+Solok	-0.9836	100.8413
+Sijunjung	-0.6905	101.0961
+Tanah Datar	-0.4676	100.5841
+Padang Pariaman	-0.5650	100.2279
+Agam	-0.2519	100.1709
+Lima Puluh Kota	0.0203	100.5697
+Pasaman	0.3926	100.0872
+Kepulauan Mentawai	-1.8491	99.3366
+Dharmasraya	-1.1312	101.5572
+Solok Selatan	-1.4236	101.2677
+Pasaman Barat	0.2035	99.6855
+Kota Padang	-0.8989	100.4376
+Kota Solok	-0.7829	100.6299
+Kota Sawahlunto	-0.6527	100.7544
+Kota Padang Panjang	-0.4725	100.4023
+Kota Bukittinggi	-0.2996	100.3725
+Kota Payakumbuh	-0.2270	100.6321
+Kota Pariaman	-0.6086	100.1381
+Kampar	0.3214	101.0658
+Indragiri Hulu	-0.5414	102.3319
+Bengkalis	1.4119	101.6429
+Indragiri Hilir	-0.2334	103.1638
+Pelalawan	0.2175	102.2804
+Rokan Hulu	0.9430	100.5054
+Rokan Hilir	1.7731	100.7492
+Siak	0.8170	101.8754
+Kuantan Singingi	-0.4742	101.5059
+Kepulauan Meranti	1.0033	102.6493
+Kota Pekanbaru	0.5513	101.4657
+Kota Dumai	1.8208	101.2823
+Kerinci	-2.0323	101.4653
+Merangin	-2.1931	102.0683
+Sarolangun	-2.3063	102.6725
+Batanghari	-1.7499	103.0943
+Muaro Jambi	-1.6133	103.7378
+Tanjung Jabung Barat	-1.0713	103.1146
+Tanjung Jabung Timur	-1.2254	103.9653
+Bungo	-1.5916	101.9271
+Tebo	-1.3076	102.3643
+Kota Jambi	-1.6182	103.5998
+Kota Sungai Penuh	-2.1133	101.3393
+Ogan Komering Ulu	-4.0937	104.1052
+Ogan Komering Ilir	-3.3637	105.3973
+Muara Enim	-3.6351	103.9978
+Lahat	-3.8288	103.3789
+Musi Rawas	-3.1654	103.1365
+Musi Banyuasin	-2.4503	103.8278
+Banyuasin	-2.5194	104.6874
+Ogan Komering Ulu Timur	-4.0743	104.5670
+Ogan Komering Ulu Selatan	-4.5889	103.9101
+Ogan Ilir	-3.4153	104.6053
+Empat Lawang	-3.7515	102.9480
+Penukal Abab Lematang Ilir	-3.2010	103.9950
+Musi Rawas Utara	-2.7402	102.7438
+Kota Palembang	-2.9717	104.7413
+Kota Pagar Alam	-4.1176	103.2664
+Kota Lubuk Linggau	-3.2630	102.8751
+Kota Prabumulih	-3.4480	104.2289
+Bengkulu Selatan	-4.3484	103.0212
+Rejang Lebong	-3.4305	102.7020
+Bengkulu Utara	-3.4188	102.0019
+Kaur	-4.6111	103.4123
+Seluma	-4.0520	102.6595
+Muko Muko	-2.6903	101.4819
+Lebong	-3.0900	102.2478
+Kepahiang	-3.6289	102.6445
+Bengkulu Tengah	-3.6852	102.4044
+Kota Bengkulu	-3.8414	102.3082
+Lampung Selatan	-5.5299	105.5012
+Lampung Tengah	-4.8563	105.2721
+Lampung Utara	-4.7968	104.8074
+Lampung Barat	-5.0506	104.2530
+Tulang Bawang	-4.3732	105.5276
+Tanggamus	-5.4281	104.6741
+Lampung Timur	-5.1313	105.6490
+Way Kanan	-4.5143	104.6062
+Pesawaran	-5.4735	105.1152
+Pringsewu	-5.3364	104.9334
+Mesuji	-4.0248	105.3784
+Tulang Bawang Barat	-4.4257	105.0874
+Pesisir Barat	-5.3355	104.1628
+Kota Bandar Lampung	-5.4142	105.2621
+Kota Metro	-5.1173	105.3080
+Bangka	-1.9043	105.9196
+Belitung	-2.8676	107.7102
+Bangka Selatan	-2.7786	106.3491
+Bangka Tengah	-2.4324	106.2339
+Bangka Barat	-1.8892	105.4876
+Belitung Timur	-2.9085	108.0482
+Kota Pangkal Pinang	-2.1105	106.1132
+Bintan	1.0076	104.7038
+Karimun	0.8255	103.5311
+Natuna	3.7821	108.2603
+Lingga	-0.2218	104.5269
+Kepulauan Anambas	3.0876	106.0646
+Kota Batam	0.9630	104.0636
+Kota Tanjung Pinang	0.9196	104.4871
+Administrasi Kepulauan Seribu	-5.7004	106.5790
+Kota Administrasi Jakarta Pusat	-6.1812	106.8351
+Kota Administrasi Jakarta Utara	-6.1272	106.8666
+Kota Administrasi Jakarta Barat	-6.1653	106.7483
+Kota Administrasi Jakarta Selatan	-6.2726	106.8100
+Kota Administrasi Jakarta Timur	-6.2550	106.9007
+Bogor	-6.5598	106.7670
+Sukabumi	-7.0763	106.7076
+Cianjur	-7.1309	107.1592
+Bandung	-7.0976	107.6087
+Garut	-7.3594	107.7879
+Tasikmalaya	-7.4967	108.1416
+Ciamis	-7.2902	108.4286
+Kuningan	-7.0034	108.5598
+Cirebon	-6.7462	108.5522
+Majalengka	-6.8151	108.2572
+Sumedang	-6.8247	107.9813
+Indramayu	-6.4475	108.1690
+Subang	-6.4846	107.7318
+Purwakarta	-6.5953	107.4308
+Karawang	-6.2523	107.3543
+Bekasi	-6.2197	107.1217
+Bandung Barat	-6.8904	107.4150
+Pangandaran	-7.6356	108.5186
+Kota Bogor	-6.5935	106.7994
+Kota Sukabumi	-6.9399	106.9244
+Kota Bandung	-6.9192	107.6366
+Kota Cirebon	-6.7417	108.5533
+Kota Bekasi	-6.2808	106.9754
+Kota Depok	-6.3962	106.8168
+Kota Cimahi	-6.8863	107.5429
+Kota Tasikmalaya	-7.3605	108.2191
+Kota Banjar	-7.3770	108.5672
+Cilacap	-7.4889	108.8898
+Banyumas	-7.4555	109.1758
+Purbalingga	-7.3232	109.4072
+Banjarnegara	-7.3513	109.6571
+Kebumen	-7.6550	109.6174
+Purworejo	-7.7004	109.9661
+Wonosobo	-7.4163	109.9074
+Magelang	-7.5017	110.2472
+Boyolali	-7.4165	110.6525
+Klaten	-7.6858	110.6195
+Sukoharjo	-7.6808	110.8348
+Wonogiri	-7.9193	110.9992
+Karanganyar	-7.6141	111.0192
+Sragen	-7.3853	110.9741
+Grobogan	-7.1176	110.9272
+Blora	-7.0744	111.3874
+Rembang	-6.7751	111.4615
+Pati	-6.7433	111.0423
+Kudus	-6.7903	110.8699
+Jepara	-6.5490	110.7681
+Demak	-6.9108	110.6340
+Semarang	-7.2709	110.4735
+Temanggung	-7.2577	110.1363
+Kendal	-7.0387	110.1573
+Batang	-7.0210	109.8616
+Pekalongan	-7.0570	109.6205
+Pemalang	-7.0368	109.3952
+Tegal	-7.0288	109.1585
+Brebes	-7.0628	108.9295
+Kota Magelang	-7.4766	110.2201
+Kota Surakarta	-7.5579	110.8231
+Kota Salatiga	-7.3377	110.4984
+Kota Semarang	-7.0239	110.3915
+Kota Pekalongan	-6.8934	109.6772
+Kota Tegal	-6.8692	109.1157
+Kulon Progo	-7.8187	110.1671
+Bantul	-7.9013	110.3549
+Gunungkidul	-7.9939	110.6118
+Sleman	-7.7165	110.3832
+Kota Yogyakarta	-7.8033	110.3744
+Pacitan	-8.1250	111.1781
+Ponorogo	-7.9313	111.4995
+Trenggalek	-8.1607	111.6273
+Tulungagung	-8.1135	111.8877
+Blitar	-8.1310	112.2372
+Kediri	-7.8287	112.0892
+Malang	-8.1259	112.6409
+Lumajang	-8.1254	113.1385
+Jember	-8.2351	113.6560
+Banyuwangi	-8.3647	114.2059
+Bondowoso	-7.9437	113.9477
+Situbondo	-7.8014	114.0514
+Probolinggo	-7.8664	113.3202
+Pasuruan	-7.7424	112.8318
+Sidoarjo	-7.4515	112.7003
+Mojokerto	-7.5507	112.4844
+Jombang	-7.5446	112.2641
+Nganjuk	-7.5975	111.9385
+Madiun	-7.6236	111.6459
+Magetan	-7.6634	111.3574
+Ngawi	-7.4388	111.3434
+Bojonegoro	-7.2556	111.8099
+Tuban	-6.9534	111.8922
+Lamongan	-7.1314	112.3007
+Gresik	-6.9263	112.5586
+Bangkalan	-7.0443	112.9295
+Sampang	-7.0520	113.2563
+Pamekasan	-7.0652	113.5040
+Sumenep	-6.9663	114.4031
+Kota Kediri	-7.8264	112.0161
+Kota Blitar	-8.0948	112.1670
+Kota Malang	-7.9783	112.6359
+Kota Probolinggo	-7.7738	113.2055
+Kota Pasuruan	-7.6496	112.9100
+Kota Mojokerto	-7.4714	112.4375
+Kota Madiun	-7.6295	111.5273
+Kota Surabaya	-7.2743	112.7236
+Kota Batu	-7.8347	112.5338
+Pandeglang	-6.5902	105.7430
+Lebak	-6.6420	106.2124
+Tangerang	-6.1745	106.5189
+Serang	-6.1417	106.1461
+Kota Tangerang	-6.1844	106.6520
+Kota Cilegon	-5.9989	106.0185
+Kota Serang	-6.1233	106.1668
+Kota Tangerang Selatan	-6.3021	106.7074
+Jembrana	-8.3131	114.6829
+Tabanan	-8.4302	115.0783
+Badung	-8.5828	115.1884
+Gianyar	-8.4810	115.2875
+Klungkung	-8.6670	115.4937
+Bangli	-8.2931	115.3473
+Karangasem	-8.3743	115.5299
+Buleleng	-8.2010	114.9609
+Kota Denpasar	-8.6684	115.2208
+Lombok Barat	-8.6655	116.0935
+Lombok Tengah	-8.7221	116.2898
+Lombok Timur	-8.5323	116.5308
+Sumbawa	-8.7033	117.4843
+Dompu	-8.4722	118.2169
+Bima	-8.4748	118.6190
+Sumbawa Barat	-8.8303	116.9144
+Lombok Utara	-8.3489	116.2829
+Kota Mataram	-8.5902	116.1110
+Kota Bima	-8.4549	118.7821
+Kupang	-9.9161	123.8615
+Timor Tengah Selatan	-9.8292	124.3971
+Timor Tengah Utara	-9.3777	124.5698
+Belu	-9.1543	124.9681
+Alor	-8.3039	124.5684
+Flores Timur	-8.3651	122.9445
+Sikka	-8.6093	122.3067
+Ende	-8.6764	121.7354
+Ngada	-8.6645	121.0016
+Manggarai	-8.5688	120.4011
+Sumba Timur	-9.8778	120.2548
+Sumba Barat	-9.6414	119.3834
+Lembata	-8.3812	123.5408
+Rote Ndao	-10.7260	123.1244
+Manggarai Barat	-8.6027	119.9885
+Nagekeo	-8.6897	121.2732
+Sumba Tengah	-9.5432	119.6687
+Sumba Barat Daya	-9.5341	119.1773
+Manggarai Timur	-8.5728	120.6893
+Sabu Raijua	-10.5357	121.8445
+Malaka	-9.5243	124.8884
+Kota Kupang	-10.2045	123.6045
+Sambas	1.4231	109.3496
+Mempawah	0.3518	109.1542
+Sanggau	0.2687	110.4307
+Ketapang	-1.6329	110.6054
+Sintang	0.0926	112.0544
+Kapuas Hulu	0.8256	112.8036
+Bengkayang	1.0120	109.5784
+Landak	0.5077	109.7641
+Sekadau	-0.0171	110.9489
+Melawi	-0.6304	111.7246
+Kayong Utara	-1.1044	109.8754
+Kubu Raya	-0.3918	109.5404
+Kota Pontianak	-0.0258	109.3317
+Kota Singkawang	0.8867	109.0323
+Kotawaringin Barat	-2.5722	111.7742
+Kotawaringin Timur	-2.0858	112.7152
+Kapuas	-1.7634	114.3027
+Barito Selatan	-1.7743	114.9111
+Barito Utara	-0.9284	115.1376
+Katingan	-1.6859	113.0708
+Seruyan	-2.2572	112.1987
+Sukamara	-2.6043	111.1596
+Lamandau	-1.7714	111.4178
+Gunung Mas	-1.0251	113.5588
+Pulang Pisau	-2.6909	113.9676
+Murung Raya	-0.0318	114.2623
+Barito Timur	-1.9823	115.1440
+Kota Palangkaraya	-2.0075	113.7675
+Tanah Laut	-3.8192	114.9053
+Kotabaru	-2.9847	116.0632
+Banjar	-3.3205	115.0799
+Barito Kuala	-3.0912	114.6302
+Tapin	-2.9216	115.0451
+Hulu Sungai Selatan	-2.7292	115.2055
+Hulu Sungai Tengah	-2.6094	115.4787
+Hulu Sungai Utara	-2.4393	115.1513
+Tabalong	-1.8619	115.5001
+Tanah Bumbu	-3.4397	115.6471
+Balangan	-2.3178	115.6228
+Kota Banjarmasin	-3.3291	114.5918
+Kota Banjarbaru	-3.4748	114.7912
+Paser	-1.7411	116.0921
+Kutai Kartanegara	0.1080	116.4801
+Berau	1.9125	117.3402
+Kutai Barat	-0.5033	115.8261
+Kutai Timur	0.9899	117.1292
+Penajam Paser Utara	-1.1589	116.5911
+Mahakam Ulu	0.7338	114.8335
+Kota Balikpapan	-1.1567	116.8723
+Kota Samarinda	-0.5003	117.1771
+Kota Bontang	0.0933	117.4581
+Bulungan	2.7975	117.0320
+Malinau	2.5130	115.7354
+Nunukan	4.0092	116.6429
+Tana Tidung	3.5705	117.1577
+Kota Tarakan	3.3594	117.5995
+Bolaang Mongondow	0.7087	124.0370
+Minahasa	1.2500	124.8581
+Kepulauan Sangihe	3.5527	125.5410
+Kepulauan Talaud	4.2257	126.7811
+Minahasa Selatan	1.0850	124.5189
+Minahasa Utara	1.5481	125.0053
+Minahasa Tenggara	1.0122	124.7167
+Bolaang Mongondow Utara	0.7676	123.4765
+Kepulauan Siau Tagulandang Biaro	2.5391	125.3969
+Bolaang Mongondow Timur	0.7163	124.5095
+Bolaang Mongondow Selatan	0.4443	123.9325
+Kota Manado	1.5249	124.8479
+Kota Bitung	1.4898	125.1580
+Kota Tomohon	1.3305	124.8150
+Kota Kotamobagu	0.7111	124.3183
+Banggai	-1.0185	122.5883
+Poso	-1.6784	120.5337
+Donggala	-0.4360	119.8307
+Toli Toli	0.9273	120.7300
+Buol	0.9789	121.3885
+Morowali	-2.7159	121.9237
+Banggai Kepulauan	-1.3718	123.1433
+Parigi Moutong	0.0169	120.4491
+Tojo Una Una	-1.1241	121.5725
+Sigi	-1.4087	119.9742
+Banggai Laut	-1.7801	123.5295
+Morowali Utara	-1.8270	121.3961
+Kota Palu	-0.8369	119.9120
+Kepulauan Selayar	-6.5579	120.7179
+Bulukumba	-5.4315	120.2343
+Bantaeng	-5.4902	119.9874
+Jeneponto	-5.5670	119.6989
+Takalar	-5.4185	119.4741
+Gowa	-5.3089	119.7187
+Sinjai	-5.2093	120.1354
+Bone	-4.6950	120.1300
+Maros	-4.9997	119.7263
+Pangkajene Kepulauan	-4.9385	119.4797
+Barru	-4.4400	119.6948
+Soppeng	-4.3370	119.8934
+Wajo	-3.9918	120.1728
+Sidenreng Rappang	-3.8131	119.9585
+Pinrang	-3.6281	119.6026
+Enrekang	-3.5039	119.8746
+Luwu	-3.1992	120.1831
+Tana Toraja	-3.1156	119.7116
+Luwu Utara	-2.3959	120.1644
+Luwu Timur	-2.5560	121.1283
+Toraja Utara	-2.8796	119.8643
+Kota Makassar	-5.1356	119.4639
+Kota Pare Pare	-4.0316	119.6636
+Kota Palopo	-2.9797	120.1478
+Kolaka	-4.0745	121.5220
+Konawe	-3.5309	121.8633
+Muna	-4.9447	122.6296
+Buton	-5.3165	122.9229
+Konawe Selatan	-4.2627	122.4233
+Bombana	-4.8009	121.8524
+Wakatobi	-5.5712	123.7854
+Kolaka Utara	-3.2627	121.1340
+Konawe Utara	-3.3907	122.0305
+Buton Utara	-4.7038	123.0124
+Kolaka Timur	-3.7955	121.6086
+Konawe Kepulauan	-4.1146	123.0963
+Muna Barat	-4.8169	122.4926
+Buton Tengah	-5.3170	122.3987
+Buton Selatan	-5.6047	122.6716
+Kota Kendari	-3.9977	122.5329
+Kota Bau Bau	-5.4288	122.6758
+Gorontalo	0.6929	122.7125
+Boalemo	0.6529	122.3271
+Bone Bolango	0.5324	123.2923
+Pohuwato	0.6883	121.7098
+Gorontalo Utara	0.8856	122.6645
+Kota Gorontalo	0.5384	123.0553
+Pasangkayu	-1.4897	119.5076
+Mamuju	-2.5197	119.3446
+Mamasa	-2.9457	119.3144
+Polewali Mandar	-3.3101	119.1471
+Majene	-3.1732	118.9185
+Mamuju Tengah	-2.0027	119.5111
+Maluku Tengah	-3.1812	129.2955
+Maluku Tenggara	-5.6769	132.8881
+Kepulauan Tanimbar	-7.5843	131.3666
+Buru	-3.3294	126.7270
+Seram Bagian Timur	-3.4199	130.4426
+Seram Bagian Barat	-3.1359	128.3560
+Kepulauan Aru	-6.1962	134.4510
+Maluku Barat Daya	-7.8331	127.3041
+Buru Selatan	-3.5676	126.5242
+Kota Ambon	-3.6854	128.1950
+Kota Tual	-5.5569	132.4826
+Halmahera Barat	1.3517	127.5908
+Halmahera Tengah	0.4019	128.2953
+Halmahera Utara	1.5544	127.8348
+Halmahera Selatan	-0.8271	127.7052
+Kepulauan Sula	-1.9638	125.8397
+Halmahera Timur	1.0295	128.3086
+Pulau Morotai	2.3164	128.4484
+Pulau Taliabu	-1.8194	124.7394
+Kota Ternate	0.8385	127.1725
+Kota Tidore Kepulauan	0.4793	127.6750
+Merauke	-7.8292	139.6925
+Jayawijaya	-4.0935	138.8668
+Jayapura	-3.0100	139.9887
+Nabire	-3.3976	135.6184
+Kepulauan Yapen	-1.7455	136.1741
+Biak Numfor	-1.0028	135.8444
+Puncak Jaya	-3.4471	137.8682
+Paniai	-3.7978	136.4708
+Mimika	-4.5241	136.8449
+Sarmi	-2.4518	139.0130
+Keerom	-3.3532	140.6924
+Pegunungan Bintang	-4.5410	140.5353
+Yahukimo	-4.4726	139.5648
+Tolikara	-3.3676	138.4203
+Waropen	-2.7539	136.7547
+Boven Digoel	-6.0152	140.3912
+Mappi	-6.5024	139.3784
+Asmat	-5.3726	138.6575
+Supiori	-0.7366	135.5643
+Mamberamo Raya	-2.4346	137.9609
+Mamberamo Tengah	-3.5867	139.0198
+Yalimo	-3.8277	139.4670
+Lanny Jaya	-3.9622	138.3844
+Nduga	-4.4158	138.3367
+Puncak	-3.7059	137.5017
+Dogiyai	-4.0470	135.6071
+Intan Jaya	-3.5117	136.8119
+Deiyai	-4.1899	136.3949
+Kota Jayapura	-2.6645	140.8001
+Sorong	-1.1231	131.5567
+Manokwari	-0.9336	133.8011
+Fak Fak	-3.1117	132.8427
+Sorong Selatan	-1.7319	132.1961
+Raja Ampat	-0.8972	130.5694
+Teluk Bintuni	-2.1544	133.4537
+Teluk Wondama	-2.8499	134.4041
+Kaimana	-3.5853	134.0563
+Tambrauw	-0.8012	132.7628
+Maybrat	-1.3800	132.5120
+Manokwari Selatan	-1.5480	134.0177
+Pegunungan Arfak	-1.2837	133.7010
+Kota Sorong	-0.8666	131.3178
