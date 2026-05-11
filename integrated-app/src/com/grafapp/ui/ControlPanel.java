@@ -5,14 +5,18 @@ import com.grafapp.model.*;
 import com.grafapp.util.GraphParser;
 import com.grafapp.visualization.GraphCanvas;
 import com.grafapp.visualization.SimulationController;
+import javafx.application.Platform;
 import javafx.animation.PauseTransition;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 import javafx.util.Duration;
 import java.io.File;
 import java.util.*;
@@ -1405,6 +1409,14 @@ public class ControlPanel extends VBox {
             addMstButtons(resData);
         }
 
+        // Bandwidth actions
+        if (resData.containsKey("bandwidthOrderAfter")) {
+            Runnable showView = () -> showBandwidthPopup(resData, graph);
+            resultPanel.setBandwidthActions(showView);
+            addBandwidthButtons(resData);
+            showBandwidthPopup(resData, graph);
+        }
+
         simulation.play();
     }
 
@@ -1461,6 +1473,13 @@ public class ControlPanel extends VBox {
                     + " | Total Bobot: " + formatWeight(totalWeight);
             }
             return "MST: " + formatMstEdges(mstEdges, graph);
+        }
+
+        List<Integer> bwBefore = safeNodeList(resData.get("bandwidthOrderBefore"));
+        List<Integer> bwAfter = safeNodeList(resData.get("bandwidthOrderAfter"));
+        if (bwBefore != null && bwAfter != null) {
+            return "Order before: " + formatNodeList(bwBefore, graph)
+                + " | Order after: " + formatNodeList(bwAfter, graph);
         }
 
         return "";
@@ -1576,6 +1595,224 @@ public class ControlPanel extends VBox {
         sp.setMinHeight(ScrollPane.USE_PREF_SIZE);
         sp.setStyle("-fx-background-color: transparent; -fx-background: transparent;");
         return sp;
+    }
+
+    private void showBandwidthPopup(Map<String, Object> data, Graph graph) {
+        List<Integer> beforeOrder = safeNodeList(data.get("bandwidthOrderBefore"));
+        List<Integer> afterOrder = safeNodeList(data.get("bandwidthOrderAfter"));
+        if (beforeOrder == null || afterOrder == null || graph == null) {
+            return;
+        }
+
+        int bwBefore = data.get("bandwidthBefore") instanceof Number
+            ? ((Number) data.get("bandwidthBefore")).intValue()
+            : -1;
+        int bwAfter = data.get("bandwidthAfter") instanceof Number
+            ? ((Number) data.get("bandwidthAfter")).intValue()
+            : -1;
+        String method = String.valueOf(data.getOrDefault("bandwidthMethod", "Heuristic"));
+
+        Stage stage = new Stage();
+        stage.setTitle("Graph Bandwidth Comparison");
+        stage.initModality(Modality.NONE);
+
+        BorderPane root = new BorderPane();
+        root.setPadding(new Insets(12));
+
+        Label headline = new Label(
+            "Bandwidth before: " + bwBefore + " | after: " + bwAfter + " (" + method + ")"
+        );
+        headline.setFont(Font.font("Segoe UI", FontWeight.BOLD, 14));
+        headline.setTextFill(Color.web("#212121"));
+
+        HBox columns = new HBox(12);
+        Map<Integer, Integer> afterLabelMap = buildOrderLabelMap(afterOrder);
+        BandwidthColumn beforeCol = buildBandwidthColumn("Before", graph, beforeOrder, bwBefore, null);
+        BandwidthColumn afterCol = buildBandwidthColumn("After", graph, afterOrder, bwAfter, afterLabelMap);
+        HBox.setHgrow(beforeCol.container, Priority.ALWAYS);
+        HBox.setHgrow(afterCol.container, Priority.ALWAYS);
+        columns.getChildren().addAll(beforeCol.container, afterCol.container);
+
+        VBox mappingBox = new VBox(6);
+        Label mappingTitle = new Label("Label mapping (original -> new label)");
+        mappingTitle.setFont(Font.font("Segoe UI", FontWeight.SEMI_BOLD, 12));
+        mappingTitle.setTextFill(Color.web("#424242"));
+
+        TextArea mappingArea = new TextArea(buildBandwidthMappingText(graph, beforeOrder, afterOrder));
+        mappingArea.setEditable(false);
+        mappingArea.setWrapText(true);
+        mappingArea.setPrefRowCount(4);
+        mappingArea.setStyle("-fx-control-inner-background: #FAFAFA;");
+        mappingBox.getChildren().addAll(mappingTitle, mappingArea);
+
+        root.setTop(headline);
+        BorderPane.setMargin(headline, new Insets(0, 0, 10, 0));
+        root.setCenter(columns);
+        root.setBottom(mappingBox);
+        BorderPane.setMargin(mappingBox, new Insets(10, 0, 0, 0));
+
+        Scene scene = new Scene(root, 1100, 750);
+        stage.setScene(scene);
+        stage.show();
+        Platform.runLater(() -> {
+            beforeCol.canvas.startLayout();
+            afterCol.canvas.startLayout();
+        });
+    }
+
+    private BandwidthColumn buildBandwidthColumn(
+        String title,
+        Graph graph,
+        List<Integer> order,
+        int bandwidth,
+        Map<Integer, Integer> labelMap
+    ) {
+        VBox col = new VBox(8);
+        col.setPadding(new Insets(8));
+        col.setStyle("-fx-background-color: #FAFAFA; -fx-border-color: #E0E0E0; -fx-border-width: 1;");
+
+        Label titleLabel = new Label(title);
+        titleLabel.setFont(Font.font("Segoe UI", FontWeight.BOLD, 13));
+        titleLabel.setTextFill(Color.web("#1565C0"));
+
+        Label bwLabel = new Label("Bandwidth: " + bandwidth);
+        bwLabel.setFont(Font.font("Segoe UI", 12));
+        bwLabel.setTextFill(Color.web("#424242"));
+
+        Graph viewGraph = cloneGraph(graph);
+        if (labelMap != null) {
+            applyNodeLabels(viewGraph, labelMap);
+        }
+
+        GraphCanvas viewCanvas = new GraphCanvas();
+        viewCanvas.setPrefSize(480, 260);
+        viewCanvas.setMinSize(320, 200);
+        viewCanvas.setShowEdgeWeights(false);
+        viewCanvas.setGraph(viewGraph, false);
+
+        Label matrixLabel = new Label("Adjacency matrix");
+        matrixLabel.setFont(Font.font("Segoe UI", FontWeight.SEMI_BOLD, 12));
+        matrixLabel.setTextFill(Color.web("#424242"));
+
+        javafx.scene.Node matrixView = buildAdjacencyMatrixView(graph, order);
+
+        col.getChildren().addAll(titleLabel, viewCanvas, bwLabel, matrixLabel, matrixView);
+        VBox.setVgrow(viewCanvas, Priority.NEVER);
+        VBox.setVgrow(matrixView, Priority.ALWAYS);
+        return new BandwidthColumn(col, viewCanvas);
+    }
+
+    private javafx.scene.Node buildAdjacencyMatrixView(Graph graph, List<Integer> order) {
+        GridPane grid = new GridPane();
+        grid.setHgap(0);
+        grid.setVgap(0);
+        grid.setStyle("-fx-border-color: #BDBDBD; -fx-border-width: 1px; -fx-background-color: white;");
+
+        String headerStyle = "-fx-font-weight: bold; -fx-text-fill: #212121; -fx-padding: 3 6; "
+            + "-fx-border-color: #E0E0E0; -fx-border-width: 0 1 1 0; -fx-background-color: #F5F5F5; "
+            + "-fx-alignment: center;";
+
+        Label corner = new Label("");
+        corner.setStyle(headerStyle);
+        corner.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
+        grid.add(corner, 0, 0);
+
+        for (int j = 0; j < order.size(); j++) {
+            Label lbl = new Label(String.valueOf(j));
+            lbl.setStyle(headerStyle);
+            lbl.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
+            grid.add(lbl, j + 1, 0);
+        }
+
+        for (int i = 0; i < order.size(); i++) {
+            int rowId = order.get(i);
+            Label rowLbl = new Label(String.valueOf(i));
+            rowLbl.setStyle(headerStyle);
+            rowLbl.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
+            grid.add(rowLbl, 0, i + 1);
+
+            for (int j = 0; j < order.size(); j++) {
+                int colId = order.get(j);
+                boolean hasEdge = graph.getEdge(rowId, colId) != null;
+                String text = (i == j) ? "0" : (hasEdge ? "1" : "");
+                Label cell = new Label(text);
+                String cellStyle = "-fx-text-fill: #212121; -fx-padding: 3 6; -fx-alignment: center; "
+                    + "-fx-border-color: #E0E0E0; -fx-border-width: 0 1 1 0;";
+                if (i == j) {
+                    cellStyle += "-fx-background-color: #FAFAFA; -fx-text-fill: #757575;";
+                } else if (hasEdge) {
+                    cellStyle += "-fx-background-color: #E3F2FD; -fx-text-fill: #0D47A1; "
+                        + "-fx-font-weight: bold;";
+                }
+                cell.setStyle(cellStyle);
+                cell.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
+                grid.add(cell, j + 1, i + 1);
+            }
+        }
+
+        ScrollPane sp = new ScrollPane(grid);
+        sp.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+        sp.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+        sp.setPrefViewportHeight(260);
+        sp.setStyle("-fx-background-color: transparent; -fx-background: transparent;");
+        return sp;
+    }
+
+    private Map<Integer, Integer> buildOrderLabelMap(List<Integer> order) {
+        Map<Integer, Integer> map = new HashMap<>();
+        for (int i = 0; i < order.size(); i++) {
+            map.put(order.get(i), i);
+        }
+        return map;
+    }
+
+    private String buildBandwidthMappingText(Graph graph, List<Integer> beforeOrder, List<Integer> afterOrder) {
+        Map<Integer, Integer> afterLabelMap = buildOrderLabelMap(afterOrder);
+        StringBuilder sb = new StringBuilder();
+        for (int id : beforeOrder) {
+            sb.append(formatNodeId(id, graph))
+                .append(" -> ")
+                .append(afterLabelMap.getOrDefault(id, -1))
+                .append("\n");
+        }
+        return sb.toString().trim();
+    }
+
+    private void applyNodeLabels(Graph graph, Map<Integer, Integer> labelMap) {
+        for (GraphNode node : graph.getNodes()) {
+            Integer newLabel = labelMap.get(node.getId());
+            if (newLabel != null) {
+                node.setLabel(String.valueOf(newLabel));
+            }
+        }
+    }
+
+    private Graph cloneGraph(Graph source) {
+        Graph copy = new Graph(source.isDirected());
+        copy.setWeighted(source.isWeighted());
+        for (GraphNode node : source.getNodes()) {
+            GraphNode cloned = new GraphNode(node.getId());
+            cloned.setLabel(node.getLabel());
+            copy.addNode(cloned);
+        }
+        for (GraphEdge edge : source.getEdges()) {
+            if (source.isWeighted()) {
+                copy.addEdge(edge.getSource(), edge.getTarget(), edge.getWeight());
+            } else {
+                copy.addEdge(edge.getSource(), edge.getTarget());
+            }
+        }
+        return copy;
+    }
+
+    private static final class BandwidthColumn {
+        private final VBox container;
+        private final GraphCanvas canvas;
+
+        private BandwidthColumn(VBox container, GraphCanvas canvas) {
+            this.container = container;
+            this.canvas = canvas;
+        }
     }
 
 
@@ -1741,6 +1978,15 @@ public class ControlPanel extends VBox {
 
         Button btn = smallBtn("Highlight MST", "#1976D2");
         btn.setOnAction(e -> highlightTreeEdges(mstEdges));
+        resultActionPane.getChildren().add(btn);
+    }
+
+    private void addBandwidthButtons(Map<String, Object> data) {
+        if (!data.containsKey("bandwidthOrderAfter")) {
+            return;
+        }
+        Button btn = smallBtn("Show bandwidth view", "#1565C0");
+        btn.setOnAction(e -> showBandwidthPopup(data, canvas.getGraph()));
         resultActionPane.getChildren().add(btn);
     }
 

@@ -27,6 +27,7 @@ public class AlgorithmRegistry {
         // -- Optimization --
         register(new TravelingSalesmanGreedyAlgorithm());
         register(new TravelingSalesmanNearestNeighborAlgorithm());
+        register(new BandwidthOptimizationAlgorithm());
         // -- Spanning Tree --
         register(new MinimumSpanningTreeAlgorithm());
         register(new PrimMinimumSpanningTreeAlgorithm());

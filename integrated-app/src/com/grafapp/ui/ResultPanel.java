@@ -154,6 +154,15 @@ public class ResultPanel extends HBox {
         actionPane.getChildren().add(btn);
     }
 
+    public void setBandwidthActions(Runnable onShow) {
+        actionPane.getChildren().clear();
+        if (onShow == null) return;
+
+        Button btn = actionButton("Show bandwidth view", "#1565C0");
+        btn.setOnAction(e -> onShow.run());
+        actionPane.getChildren().add(btn);
+    }
+
     private void highlightNodes(List<Integer> nodes, NodeState state) {
         if (canvas == null) return;
         Graph g = canvas.getGraph();

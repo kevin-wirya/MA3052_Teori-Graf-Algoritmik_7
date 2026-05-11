@@ -37,14 +37,12 @@ public class TravelingSalesmanNearestNeighborAlgorithm implements GraphAlgorithm
     @Override
     public String getDescription() {
         return "Mencari tur TSP optimal global dengan algoritma Held-Karp (dynamic programming). "
-            + "Pendekatan ini exact (bukan brute force), dengan kompleksitas O(n^2 * 2^n).";
+            + "Pendekatan ini exact (bukan brute force), diulang untuk semua start node.";
     }
 
     @Override
     public List<ParameterInfo> getRequiredParameters() {
-        return Arrays.asList(
-            new ParameterInfo("startNode", "Start Node", ParameterInfo.Type.NODE_SELECT, 0, true)
-        );
+        return Collections.emptyList();
     }
 
     @Override
@@ -60,23 +58,9 @@ public class TravelingSalesmanNearestNeighborAlgorithm implements GraphAlgorithm
         List<Integer> nodeIds = new ArrayList<>(graph.getNodeIds());
         Collections.sort(nodeIds);
 
-        int requestedStart = parameters.get("startNode") instanceof Number
-            ? ((Number) parameters.get("startNode")).intValue()
-            : nodeIds.get(0);
-        int startNode = nodeIds.contains(requestedStart) ? requestedStart : nodeIds.get(0);
-
-        if (startNode != requestedStart) {
-            steps.add(AlgorithmStep.log("Start node tidak valid, menggunakan node " + startNode + "."));
-        }
-
-        steps.add(AlgorithmStep.log("Menggunakan Held-Karp dynamic programming (exact, non-bruteforce)."));
-        steps.add(AlgorithmStep.markStart(startNode, "Mulai tur dari node " + startNode));
-        steps.add(AlgorithmStep.markPathNode(startNode, "Node awal tur: " + startNode));
-
         if (graph.getNodeCount() == 1) {
-            List<Integer> trivialTour = new ArrayList<>();
-            trivialTour.add(startNode);
-            trivialTour.add(startNode);
+            int startNode = nodeIds.get(0);
+            List<Integer> trivialTour = Arrays.asList(startNode, startNode);
             putSuccessData(data, trivialTour, 0.0);
             return new AlgorithmResult(steps,
                 "Tur TSP trivial: " + formatTour(trivialTour) + " (total bobot = 0)", data);
@@ -86,37 +70,60 @@ public class TravelingSalesmanNearestNeighborAlgorithm implements GraphAlgorithm
             steps.add(AlgorithmStep.log(
                 "Jumlah node " + graph.getNodeCount()
                     + " melebihi batas exact solver (" + MAX_EXACT_NODES + ")."));
-            putFailureData(data, Collections.singletonList(startNode));
+            putFailureData(data, Collections.emptyList());
             return new AlgorithmResult(steps,
                 "Graf terlalu besar untuk TSP exact Held-Karp. "
                     + "Kurangi jumlah node agar solusi global dapat dihitung.",
                 data);
         }
 
-        List<Integer> orderedNodeIds = buildOrderedNodeList(nodeIds, startNode);
-        double[][] weights = buildWeightMatrix(graph, orderedNodeIds);
-        int dpStateCount = 1 << (orderedNodeIds.size() - 1);
-        steps.add(AlgorithmStep.log("State DP yang diproses: " + dpStateCount + " subset."));
+        steps.add(AlgorithmStep.log("Menggunakan Held-Karp dynamic programming (exact) untuk semua start node."));
 
-        HeldKarpResult result = solveHeldKarp(weights, orderedNodeIds);
-        if (result == null) {
+        int dpStateCount = 1 << (nodeIds.size() - 1);
+        steps.add(AlgorithmStep.log("State DP per start: " + dpStateCount + " subset."));
+
+        HeldKarpResult bestResult = null;
+        List<Integer> bestTour = null;
+        int bestStart = -1;
+
+        for (int startNode : nodeIds) {
+            List<Integer> orderedNodeIds = buildOrderedNodeList(nodeIds, startNode);
+            double[][] weights = buildWeightMatrix(graph, orderedNodeIds);
+
+            HeldKarpResult result = solveHeldKarp(weights, orderedNodeIds);
+            if (result == null) {
+                continue;
+            }
+
+            List<Integer> tour = toNodeIdTour(result.tourNodeIndices, orderedNodeIds);
+            if (bestResult == null || result.totalCost + EPS < bestResult.totalCost
+                || (Math.abs(result.totalCost - bestResult.totalCost) < EPS && startNode < bestStart)) {
+                bestResult = result;
+                bestTour = tour;
+                bestStart = startNode;
+            }
+        }
+
+        if (bestResult == null || bestTour == null) {
             steps.add(AlgorithmStep.log(
                 "Tidak ditemukan tur Hamiltonian yang mengunjungi semua node dan kembali ke start."));
-            putFailureData(data, Collections.singletonList(startNode));
+            putFailureData(data, Collections.emptyList());
             return new AlgorithmResult(steps,
                 "Tidak ada tur TSP valid yang mengunjungi semua node dan kembali ke node awal.",
                 data);
         }
 
-        List<Integer> tour = toNodeIdTour(result.tourNodeIndices, orderedNodeIds);
+        steps.add(AlgorithmStep.log(
+            "Start terbaik: " + bestStart + " (total bobot = " + formatWeight(bestResult.totalCost) + ")"));
+        steps.add(AlgorithmStep.markStart(bestStart, "Mulai tur dari node " + bestStart));
+        steps.add(AlgorithmStep.markPathNode(bestStart, "Node awal tur: " + bestStart));
 
         steps.add(AlgorithmStep.log("Tur optimal global ditemukan. Menandai edge tur akhir."));
-        for (int i = 1; i < result.tourNodeIndices.size(); i++) {
-            int fromIndex = result.tourNodeIndices.get(i - 1);
-            int toIndex = result.tourNodeIndices.get(i);
-            int fromNode = orderedNodeIds.get(fromIndex);
-            int toNode = orderedNodeIds.get(toIndex);
-            double edgeWeight = weights[fromIndex][toIndex];
+        for (int i = 1; i < bestTour.size(); i++) {
+            int fromNode = bestTour.get(i - 1);
+            int toNode = bestTour.get(i);
+            GraphEdge edge = graph.getEdge(fromNode, toNode);
+            double edgeWeight = edge != null ? edge.getWeight() : INF;
 
             steps.add(AlgorithmStep.traverseEdge(fromNode, toNode,
                 "Pilih edge tur optimal " + fromNode + " -> " + toNode
@@ -124,16 +131,16 @@ public class TravelingSalesmanNearestNeighborAlgorithm implements GraphAlgorithm
             steps.add(AlgorithmStep.markPathEdge(fromNode, toNode,
                 "Masuk tur optimal: " + fromNode + " - " + toNode));
 
-            if (i < result.tourNodeIndices.size() - 1) {
+            if (i < bestTour.size() - 1) {
                 steps.add(AlgorithmStep.markPathNode(toNode, "Node dalam tur optimal: " + toNode));
             }
         }
-        steps.add(AlgorithmStep.markEnd(startNode, "Tur selesai di node awal " + startNode));
+        steps.add(AlgorithmStep.markEnd(bestStart, "Tur selesai di node awal " + bestStart));
 
-        putSuccessData(data, tour, result.totalCost);
+        putSuccessData(data, bestTour, bestResult.totalCost);
 
-        String summary = "Tur TSP optimal (Held-Karp) ditemukan: " + formatTour(tour)
-            + " (total bobot = " + formatWeight(result.totalCost) + ")";
+        String summary = "Tur TSP optimal (Held-Karp) terbaik dari start " + bestStart + ": "
+            + formatTour(bestTour) + " (total bobot = " + formatWeight(bestResult.totalCost) + ")";
         return new AlgorithmResult(steps, summary, data);
     }
 

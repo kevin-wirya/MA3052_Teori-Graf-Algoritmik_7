@@ -236,23 +236,28 @@ public class GraphParser {
             return false;
         }
 
-        int startIndex = 0;
         String[] firstLine = dataLines.get(0).split("[\\s,;]+");
-        if (firstLine.length == 1) {
-            try {
-                Integer.parseInt(firstLine[0]);
-                startIndex = 1;
-            } catch (NumberFormatException ex) {
-                // Not a header
-            }
-        }
-
-        int nodeCount = dataLines.size() - startIndex;
-        if (nodeCount <= 0) {
+        if (firstLine.length != 1) {
             return false;
         }
 
-        for (int i = startIndex; i < dataLines.size(); i++) {
+        int n;
+        try {
+            n = Integer.parseInt(firstLine[0]);
+        } catch (NumberFormatException ex) {
+            return false;
+        }
+
+        if (n <= 0) {
+            return false;
+        }
+
+        int nodeCount = dataLines.size() - 1;
+        if (nodeCount != n) {
+            return false;
+        }
+
+        for (int i = 1; i < dataLines.size(); i++) {
             String[] parts = dataLines.get(i).split("[\\s,;]+");
             if (parts.length < 2) {
                 return false;

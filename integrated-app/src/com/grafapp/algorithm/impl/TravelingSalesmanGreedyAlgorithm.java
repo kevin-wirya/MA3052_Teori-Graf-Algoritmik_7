@@ -34,14 +34,12 @@ public class TravelingSalesmanGreedyAlgorithm implements GraphAlgorithm {
     @Override
     public String getDescription() {
         return "Mencari pendekatan tur TSP menggunakan algoritma Greedy (Nearest Neighbor). "
-            + "Sangat cepat (O(n^2)) namun hasil mungkin bukan yang paling optimal.";
+            + "Memeriksa semua node sebagai titik awal, cepat (O(n^3)) namun hasil mungkin bukan yang paling optimal.";
     }
 
     @Override
     public List<ParameterInfo> getRequiredParameters() {
-        return Arrays.asList(
-            new ParameterInfo("startNode", "Start Node", ParameterInfo.Type.NODE_SELECT, 0, true)
-        );
+        return Collections.emptyList();
     }
 
     @Override
@@ -57,28 +55,64 @@ public class TravelingSalesmanGreedyAlgorithm implements GraphAlgorithm {
         List<Integer> nodeIds = new ArrayList<>(graph.getNodeIds());
         Collections.sort(nodeIds);
 
-        int requestedStart = parameters.get("startNode") instanceof Number
-            ? ((Number) parameters.get("startNode")).intValue()
-            : nodeIds.get(0);
-        int startNode = nodeIds.contains(requestedStart) ? requestedStart : nodeIds.get(0);
-
-        if (startNode != requestedStart) {
-            steps.add(AlgorithmStep.log("Start node tidak valid, menggunakan node " + startNode + "."));
-        }
-
-        steps.add(AlgorithmStep.log("Menggunakan pendekatan Greedy (Nearest Neighbor)."));
-        steps.add(AlgorithmStep.markStart(startNode, "Mulai tur dari node " + startNode));
-        steps.add(AlgorithmStep.markPathNode(startNode, "Node awal tur: " + startNode));
-
         if (graph.getNodeCount() == 1) {
-            List<Integer> trivialTour = new ArrayList<>();
-            trivialTour.add(startNode);
-            trivialTour.add(startNode);
+            int startNode = nodeIds.get(0);
+            List<Integer> trivialTour = Arrays.asList(startNode, startNode);
             putSuccessData(data, trivialTour, 0.0);
             return new AlgorithmResult(steps,
                 "Tur TSP trivial: " + formatTour(trivialTour) + " (total bobot = 0)", data);
         }
 
+        steps.add(AlgorithmStep.log("Menggunakan pendekatan Greedy (Nearest Neighbor) untuk semua start node."));
+
+        GreedyResult best = null;
+        int bestStart = -1;
+        for (int startCandidate : nodeIds) {
+            GreedyResult candidate = computeGreedyTour(graph, startCandidate);
+            if (!candidate.found) {
+                continue;
+            }
+            if (best == null || candidate.totalCost + EPS < best.totalCost
+                || (Math.abs(candidate.totalCost - best.totalCost) < EPS && startCandidate < bestStart)) {
+                best = candidate;
+                bestStart = startCandidate;
+            }
+        }
+
+        if (best == null) {
+            steps.add(AlgorithmStep.log("Tidak ada tur Hamiltonian yang valid dari semua start node."));
+            putFailureData(data, Collections.emptyList());
+            return new AlgorithmResult(steps, "Tur gagal: graf tidak memiliki tur TSP valid.", data);
+        }
+
+        steps.add(AlgorithmStep.log(
+            "Start terbaik: " + bestStart + " (total bobot = " + formatWeight(best.totalCost) + ")"));
+        steps.add(AlgorithmStep.markStart(bestStart, "Mulai tur terbaik dari node " + bestStart));
+        steps.add(AlgorithmStep.markPathNode(bestStart, "Node awal tur: " + bestStart));
+
+        List<Integer> tour = best.tour;
+        for (int i = 1; i < tour.size(); i++) {
+            int from = tour.get(i - 1);
+            int to = tour.get(i);
+            GraphEdge edge = graph.getEdge(from, to);
+            double weight = edge != null ? edge.getWeight() : INF;
+            steps.add(AlgorithmStep.traverseEdge(from, to,
+                "Greedy pilih edge " + from + " -> " + to + " (w=" + formatWeight(weight) + ")"));
+            steps.add(AlgorithmStep.markPathEdge(from, to, "Masuk tur: " + from + " - " + to));
+            if (i < tour.size() - 1) {
+                steps.add(AlgorithmStep.markPathNode(to, "Terkunjungi: " + to));
+            }
+        }
+        steps.add(AlgorithmStep.markEnd(bestStart, "Tur selesai."));
+
+        putSuccessData(data, tour, best.totalCost);
+
+        String summary = "Tur TSP (Greedy) terbaik dari start " + bestStart + ": "
+            + formatTour(tour) + " (total bobot = " + formatWeight(best.totalCost) + ")";
+        return new AlgorithmResult(steps, summary, data);
+    }
+
+    private GreedyResult computeGreedyTour(Graph graph, int startNode) {
         Set<Integer> visited = new HashSet<>();
         List<Integer> tour = new ArrayList<>();
         tour.add(startNode);
@@ -95,7 +129,8 @@ public class TravelingSalesmanGreedyAlgorithm implements GraphAlgorithm {
                 if (!visited.contains(neighbor)) {
                     GraphEdge edge = graph.getEdge(current, neighbor);
                     if (edge != null && Double.isFinite(edge.getWeight())) {
-                        if (edge.getWeight() < bestWeight || (Math.abs(edge.getWeight() - bestWeight) < EPS && neighbor < bestNext)) {
+                        if (edge.getWeight() < bestWeight
+                            || (Math.abs(edge.getWeight() - bestWeight) < EPS && neighbor < bestNext)) {
                             bestWeight = edge.getWeight();
                             bestNext = neighbor;
                         }
@@ -104,41 +139,36 @@ public class TravelingSalesmanGreedyAlgorithm implements GraphAlgorithm {
             }
 
             if (bestNext == -1) {
-                steps.add(AlgorithmStep.log("Jalan buntu! Tidak ada rute ke node yang belum dikunjungi. Graf tidak terhubung sempurna."));
-                putFailureData(data, tour);
-                return new AlgorithmResult(steps, "Tur gagal: graf tidak memiliki jalur Hamiltonian.", data);
+                return new GreedyResult(false, tour, INF);
             }
 
-            steps.add(AlgorithmStep.traverseEdge(current, bestNext, "Greedy pilih tetangga terdekat: " + bestNext + " (w=" + formatWeight(bestWeight) + ")"));
-            steps.add(AlgorithmStep.markPathEdge(current, bestNext, "Masuk tur: " + current + " - " + bestNext));
-            steps.add(AlgorithmStep.markPathNode(bestNext, "Terkunjungi: " + bestNext));
-            
             tour.add(bestNext);
             visited.add(bestNext);
             totalCost += bestWeight;
             current = bestNext;
         }
 
-        // Return to start
         GraphEdge closingEdge = graph.getEdge(current, startNode);
         if (closingEdge == null || !Double.isFinite(closingEdge.getWeight())) {
-            steps.add(AlgorithmStep.log("Tidak ada jalur kembali dari node terakhir " + current + " ke node awal " + startNode + "."));
-            putFailureData(data, tour);
-            return new AlgorithmResult(steps, "Tur gagal: tidak bisa kembali ke titik awal.", data);
+            return new GreedyResult(false, tour, INF);
         }
 
-        steps.add(AlgorithmStep.traverseEdge(current, startNode, "Kembali ke awal: " + current + " -> " + startNode + " (w=" + formatWeight(closingEdge.getWeight()) + ")"));
-        steps.add(AlgorithmStep.markPathEdge(current, startNode, "Selesai: kembali ke start"));
-        steps.add(AlgorithmStep.markEnd(startNode, "Tur selesai."));
-        
         tour.add(startNode);
         totalCost += closingEdge.getWeight();
 
-        putSuccessData(data, tour, totalCost);
+        return new GreedyResult(true, tour, totalCost);
+    }
 
-        String summary = "Tur TSP (Greedy) selesai: " + formatTour(tour)
-            + " (total bobot = " + formatWeight(totalCost) + ")";
-        return new AlgorithmResult(steps, summary, data);
+    private static final class GreedyResult {
+        private final boolean found;
+        private final List<Integer> tour;
+        private final double totalCost;
+
+        private GreedyResult(boolean found, List<Integer> tour, double totalCost) {
+            this.found = found;
+            this.tour = tour;
+            this.totalCost = totalCost;
+        }
     }
 
     private void putSuccessData(Map<String, Object> data, List<Integer> tour, double cost) {
