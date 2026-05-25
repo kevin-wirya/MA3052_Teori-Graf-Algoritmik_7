@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project>
+
+    <parent name="webfx-parent"/>
+
+    <groupId>com.grafapp</groupId>
+    <artifactId>integrated-app</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+
+    <modules>
+        <subdirectories-modules/>
+    </modules>
+
+    <required-libraries>
+        <webfx-library artifact="dev.webfx:webfx:0.1.0-SNAPSHOT"/>
+    </required-libraries>
+
+    <providers>
+        <provider interface="javafx.application.Application">com.grafapp.integrated.app.IntegratedApp</provider>
+    </providers>
+
+</project>
