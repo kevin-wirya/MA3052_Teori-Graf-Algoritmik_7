@@ -16,7 +16,7 @@ const mono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Graf Algoritmik Web",
+  title: "Proyek AKhir MA3052 Teori Graf Algoritmik - 7",
   description: "Graph algorithm visualizer in the browser"
 };
 
