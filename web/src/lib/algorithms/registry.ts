@@ -18,6 +18,8 @@ import { girthAlgorithm } from "@/lib/algorithms/impl/girth";
 import { bipartiteMaximumMatchingAlgorithm } from "@/lib/algorithms/impl/bipartiteMatching";
 import { timetablingAlgorithm } from "@/lib/algorithms/impl/timetabling";
 import { islandCountAlgorithm } from "@/lib/algorithms/impl/islandCount";
+import { welshPowellAlgorithm } from "@/lib/algorithms/impl/welshPowell";
+import { mazeBacktrackingAlgorithm } from "@/lib/algorithms/impl/mazeBacktracking";
 
 export class AlgorithmRegistry {
   private algorithms: GraphAlgorithm[] = [];
@@ -43,6 +45,8 @@ export class AlgorithmRegistry {
     registry.register(cycleDetectionAlgorithm);
     registry.register(girthAlgorithm);
     registry.register(islandCountAlgorithm);
+    registry.register(welshPowellAlgorithm);
+    registry.register(mazeBacktrackingAlgorithm);
     return registry;
   }
 

@@ -36,6 +36,7 @@ import { SimulationController } from "@/lib/simulation/simulationController";
 
 const INPUT_MODE_EDGE_LIST = "Edge List";
 const INPUT_MODE_TSP = "TSP Coordinates";
+const INPUT_MODE_ISLAND = "Island Matrix";
 
 const parseMatrix = (text: string) => {
   const lines = text
@@ -123,6 +124,9 @@ const SAMPLE_DATA_FILES = [
   "matching_limited.txt",
   "matching_medium.txt",
   "matching_small.txt",
+  "maze_5x5.txt",
+  "maze_10x10.txt",
+  "maze_15x15.txt",
   "path_1.txt",
   "path_2.txt",
   "petersen_graph.txt",
@@ -229,7 +233,14 @@ export default function ControlPanel({
     const matrixGraph = parseMatrix(text);
     const isIslandCount = selectedAlgorithm?.name === "Island Count";
 
-    if (matrixGraph && (isIslandCount || text.trim().split("\n")[0].trim().replace(/[\s,]+/g, "").match(/^[01]+$/))) {
+    if (mode === INPUT_MODE_ISLAND) {
+      if (matrixGraph) {
+        graph = matrixGraph;
+        fixedCoordinates = true;
+      } else {
+        graph = new Graph();
+      }
+    } else if (matrixGraph && (isIslandCount || text.trim().split("\n")[0].trim().replace(/[\s,]+/g, "").match(/^[01]+$/))) {
       graph = matrixGraph;
       fixedCoordinates = true;
     } else {
@@ -271,7 +282,13 @@ export default function ControlPanel({
     const normalized = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
     setGraphText(normalized);
     const isTsp = isTspCoordinateFormat(normalized);
-    if (isTsp) {
+    const isMatrix = !!parseMatrix(normalized) && (name.startsWith("island") || name.startsWith("maze") || name.includes("grid"));
+    if (isMatrix) {
+      setInputMode(INPUT_MODE_ISLAND);
+      setDirected(false);
+      setWeighted(false);
+      applyGraph(normalized, { inputModeOverride: INPUT_MODE_ISLAND });
+    } else if (isTsp) {
       setInputMode(INPUT_MODE_TSP);
       setDirected(false);
       setWeighted(true);
@@ -442,6 +459,7 @@ export default function ControlPanel({
             >
               <option>{INPUT_MODE_EDGE_LIST}</option>
               <option>{INPUT_MODE_TSP}</option>
+              <option>{INPUT_MODE_ISLAND}</option>
             </select>
 
             <select
@@ -472,7 +490,13 @@ export default function ControlPanel({
 
           <textarea
             className="h-14 w-full rounded-lg border border-border bg-panel-soft px-2 py-1 font-mono text-[10px] resize-none focus:border-accent focus:outline-none leading-relaxed"
-            placeholder="Format: u v [weight]..."
+            placeholder={
+              inputMode === INPUT_MODE_ISLAND
+                ? "Format Grid/Island Matrix:\n0100\n1101\n0010"
+                : inputMode === INPUT_MODE_TSP
+                ? "Format: [Label] x y..."
+                : "Format: u v [weight]..."
+            }
             value={graphText}
             onChange={(event) => {
               const value = event.target.value;
@@ -486,7 +510,7 @@ export default function ControlPanel({
               <input
                 type="checkbox"
                 checked={directed}
-                disabled={inputMode === INPUT_MODE_TSP}
+                disabled={inputMode === INPUT_MODE_TSP || inputMode === INPUT_MODE_ISLAND}
                 onChange={(event) => setDirected(event.target.checked)}
                 className="rounded text-accent focus:ring-accent h-3 w-3 border-border"
               />
@@ -496,7 +520,7 @@ export default function ControlPanel({
               <input
                 type="checkbox"
                 checked={weighted}
-                disabled={inputMode === INPUT_MODE_TSP}
+                disabled={inputMode === INPUT_MODE_TSP || inputMode === INPUT_MODE_ISLAND}
                 onChange={(event) => setWeighted(event.target.checked)}
                 className="rounded text-accent focus:ring-accent h-3 w-3 border-border"
               />
@@ -653,7 +677,7 @@ export default function ControlPanel({
             max={4}
             step={0.05}
             value={speed}
-            className="w-full h-1 bg-panel-soft rounded-lg appearance-none cursor-pointer accent-accent"
+            className="w-full slider-custom focus:outline-none"
             onChange={(event) => onSpeedChangeLocal(Number(event.target.value))}
           />
         </div>

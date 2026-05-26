@@ -17,7 +17,10 @@ const mono = IBM_Plex_Mono({
 
 export const metadata: Metadata = {
   title: "Proyek AKhir MA3052 Teori Graf Algoritmik - 7",
-  description: "Graph algorithm visualizer in the browser"
+  description: "Graph algorithm visualizer in the browser",
+  icons: {
+    icon: "/logo.png"
+  }
 };
 
 export default function RootLayout({

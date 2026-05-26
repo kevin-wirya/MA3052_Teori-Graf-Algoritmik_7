@@ -37,3 +37,58 @@ select,
 textarea {
   font: inherit;
 }
+
+/* Custom range slider styling */
+input[type="range"].slider-custom {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+  width: 100%;
+}
+
+input[type="range"].slider-custom:focus {
+  outline: none;
+}
+
+/* Track styling */
+input[type="range"].slider-custom::-webkit-slider-runnable-track {
+  background-color: rgba(27, 26, 22, 0.16);
+  border-radius: 9999px;
+  height: 6px;
+}
+
+input[type="range"].slider-custom::-moz-range-track {
+  background-color: rgba(27, 26, 22, 0.16);
+  border-radius: 9999px;
+  height: 6px;
+}
+
+/* Thumb styling */
+input[type="range"].slider-custom::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  margin-top: -5px;
+  background-color: var(--accent);
+  border-radius: 9999px;
+  height: 16px;
+  width: 16px;
+  transition: transform 0.1s ease;
+}
+
+input[type="range"].slider-custom::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+
+input[type="range"].slider-custom::-moz-range-thumb {
+  background-color: var(--accent);
+  border: none;
+  border-radius: 9999px;
+  height: 16px;
+  width: 16px;
+  transition: transform 0.1s ease;
+}
+
+input[type="range"].slider-custom::-moz-range-thumb:hover {
+  transform: scale(1.15);
+}

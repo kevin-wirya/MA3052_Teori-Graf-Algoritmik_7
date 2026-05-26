@@ -126,6 +126,7 @@ export default function GraphApp() {
       <header className="flex items-center justify-between px-5 py-3 bg-panel border border-border rounded-2xl shadow-panel shrink-0">
         <div>
           <h1 className="text-base font-bold text-accent tracking-tight flex items-center gap-2">
+            <img src="/logo.png" alt="Logo" className="h-6 w-6 object-contain" />
             <span>Graph Algorithm Visualizer</span>
             <span className="text-[10px] bg-accent/10 text-accent font-semibold px-2 py-0.5 rounded-full uppercase tracking-wider">v1.0</span>
           </h1>
