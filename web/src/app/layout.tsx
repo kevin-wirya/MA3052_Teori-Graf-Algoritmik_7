@@ -1,0 +1,36 @@
+import type { Metadata } from "next";
+import "./globals.css";
+import { IBM_Plex_Mono, Space_Grotesk } from "next/font/google";
+
+const sans = Space_Grotesk({
+  subsets: ["latin"],
+  variable: "--font-sans",
+  display: "swap"
+});
+
+const mono = IBM_Plex_Mono({
+  subsets: ["latin"],
+  weight: ["400", "600"],
+  variable: "--font-mono",
+  display: "swap"
+});
+
+export const metadata: Metadata = {
+  title: "Proyek AKhir MA3052 Teori Graf Algoritmik - 7",
+  description: "Graph algorithm visualizer in the browser",
+  icons: {
+    icon: "/logo.png"
+  }
+};
+
+export default function RootLayout({
+  children
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="en" className={`${sans.variable} ${mono.variable}`}>
+      <body>{children}</body>
+    </html>
+  );
+}

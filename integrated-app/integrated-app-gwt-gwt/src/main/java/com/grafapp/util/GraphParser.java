@@ -370,76 +370,33 @@ public class GraphParser {
     /**
      * Parse adjacency matrix format.
      * Setiap baris = satu row matrix, dipisah spasi/koma.
-     * Non-zero entry = edge. Untuk weighted graph, nilai non-zero = weight.
      */
-    public static ParseResult parseAdjacencyMatrix(String text, boolean directed, boolean weighted) {
+    public static Graph parseAdjacencyMatrix(String text, boolean directed) {
         Graph graph = new Graph(directed);
-        graph.setWeighted(weighted);
-        List<String[]> rawRows = new ArrayList<>();
+        List<int[]> matrix = new ArrayList<>();
 
         for (String line : text.split("\\n")) {
             line = line.trim();
             if (line.isEmpty() || line.startsWith("#")) continue;
             String[] parts = line.split("[\\s,;]+");
-            if (parts.length > 0) rawRows.add(parts);
+            int[] row = new int[parts.length];
+            for (int i = 0; i < parts.length; i++) {
+                row[i] = Integer.parseInt(parts[i]);
+            }
+            matrix.add(row);
         }
 
-        if (rawRows.isEmpty()) return new ParseResult(graph, -1);
-
-        // Treat first row length as n
-        int n = rawRows.get(0).length;
-        // Validate that all rows have same length
-        for (String[] row : rawRows) {
-            if (row.length != n) return new ParseResult(graph, -1);
-        }
-        // If fewer rows than columns, pad with zeros (allow triangular input)
-        // If more rows than columns, truncate to n x n
-        int actualRows = Math.min(rawRows.size(), n);
+        int n = matrix.size();
         for (int i = 0; i < n; i++) graph.addNode(i);
 
-        for (int i = 0; i < actualRows; i++) {
-            String[] row = rawRows.get(i);
+        for (int i = 0; i < n; i++) {
+            int[] row = matrix.get(i);
             int start = directed ? 0 : i + 1;
-            for (int j = start; j < Math.min(row.length, n); j++) {
-                try {
-                    double val = Double.parseDouble(row[j]);
-                    if (val != 0) {
-                        if (weighted) {
-                            graph.addEdge(i, j, val);
-                        } else {
-                            graph.addEdge(i, j);
-                        }
-                    }
-                } catch (NumberFormatException e) { /* skip */ }
+            for (int j = start; j < row.length && j < n; j++) {
+                if (row[j] != 0) graph.addEdge(i, j);
             }
         }
-        return new ParseResult(graph, -1);
-    }
-
-    /**
-     * Deteksi apakah teks merupakan format adjacency matrix.
-     * Ciri: semua baris memiliki jumlah kolom yang sama (n x n),
-     * setiap token numerik, dan jumlah baris = jumlah kolom.
-     */
-    public static boolean isAdjacencyMatrixFormat(String text) {
-        List<String[]> rows = new ArrayList<>();
-        for (String line : text.split("\\n")) {
-            line = line.trim();
-            if (line.isEmpty() || line.startsWith("#")) continue;
-            String[] parts = line.split("[\\s,;]+");
-            if (parts.length > 0) rows.add(parts);
-        }
-        if (rows.size() < 2) return false;
-        int cols = rows.get(0).length;
-        if (cols < 2 || rows.size() != cols) return false;
-        for (String[] row : rows) {
-            if (row.length != cols) return false;
-            for (String token : row) {
-                try { Double.parseDouble(token); }
-                catch (NumberFormatException e) { return false; }
-            }
-        }
-        return true;
+        return graph;
     }
 
     /** Load graph dari file (edge list format, undirected) */
