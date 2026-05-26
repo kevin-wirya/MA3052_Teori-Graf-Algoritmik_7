@@ -28,7 +28,6 @@ public class ControlPanel extends VBox {
 
     private static final String INPUT_MODE_EDGE_LIST = "Edge List";
     private static final String INPUT_MODE_TSP_COORDINATES = "TSP Coordinates";
-    private static final String INPUT_MODE_ADJACENCY_MATRIX = "Adjacency Matrix";
     private static final List<String> SAMPLE_DATA_FILES = List.of(
         "bandwidth_zigzag_path_10.txt",
         "bandwidth_zigzag_path_15.txt",
@@ -198,7 +197,7 @@ public class ControlPanel extends VBox {
         formatLabel.setTextFill(Color.web("#616161"));
 
         inputModeCombo = new ComboBox<>();
-        inputModeCombo.getItems().addAll(INPUT_MODE_EDGE_LIST, INPUT_MODE_TSP_COORDINATES, INPUT_MODE_ADJACENCY_MATRIX);
+        inputModeCombo.getItems().addAll(INPUT_MODE_EDGE_LIST, INPUT_MODE_TSP_COORDINATES);
         inputModeCombo.setValue(INPUT_MODE_EDGE_LIST);
         inputModeCombo.setMaxWidth(Double.MAX_VALUE);
         inputModeCombo.setStyle("-fx-font-size: 11;");
@@ -1122,8 +1121,6 @@ public class ControlPanel extends VBox {
         GraphParser.ParseResult result;
         if (isCoordinateInputMode()) {
             result = GraphParser.parseTspCoordinates(text, tspHasLabelsCb.isSelected());
-        } else if (isAdjacencyMatrixMode()) {
-            result = GraphParser.parseAdjacencyMatrix(text, false, false);
         } else {
             result = GraphParser.parseEdgeListWithStart(
                 text,
@@ -1264,16 +1261,11 @@ public class ControlPanel extends VBox {
         return INPUT_MODE_TSP_COORDINATES.equals(inputModeCombo.getValue());
     }
 
-    private boolean isAdjacencyMatrixMode() {
-        return INPUT_MODE_ADJACENCY_MATRIX.equals(inputModeCombo.getValue());
-    }
-
     private void applyInputModeSettings() {
         boolean coordinateMode = isCoordinateInputMode();
-        boolean adjMatrixMode = isAdjacencyMatrixMode();
 
-        directedCb.setDisable(coordinateMode || adjMatrixMode);
-        weightedCb.setDisable(coordinateMode || adjMatrixMode);
+        directedCb.setDisable(coordinateMode);
+        weightedCb.setDisable(coordinateMode);
 
         if (coordinateMode) {
             directedCb.setSelected(false);
@@ -1304,20 +1296,6 @@ public class ControlPanel extends VBox {
                 tspHasLabelsCb.setVisible(true);
                 tspHasLabelsCb.setManaged(true);
             }
-        } else if (adjMatrixMode) {
-            directedCb.setSelected(false);
-            weightedCb.setSelected(false);
-            if (tspHasLabelsCb != null) {
-                tspHasLabelsCb.setVisible(false);
-                tspHasLabelsCb.setManaged(false);
-            }
-            graphInputArea.setPromptText(
-                "Format adjacency matrix (n x n):\n"
-                    + "0 1 0 1\n"
-                    + "1 0 1 0\n"
-                    + "0 1 0 1\n"
-                    + "1 0 1 0"
-            );
         } else {
             if (tspHasLabelsCb != null) {
                 tspHasLabelsCb.setVisible(false);
@@ -1358,9 +1336,6 @@ public class ControlPanel extends VBox {
                     }
                 }
                 if (tspHasLabelsCb != null) tspHasLabelsCb.setSelected(labelDet);
-            } else if (GraphParser.isAdjacencyMatrixFormat(normalized)) {
-                pendingPresetLayout = null;
-                inputModeCombo.setValue(INPUT_MODE_ADJACENCY_MATRIX);
             } else {
                 pendingPresetLayout = null;
                 inputModeCombo.setValue(INPUT_MODE_EDGE_LIST);
