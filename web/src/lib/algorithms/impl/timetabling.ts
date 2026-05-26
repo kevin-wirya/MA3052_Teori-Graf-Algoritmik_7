@@ -57,7 +57,7 @@ export const timetablingAlgorithm: GraphAlgorithm = {
       }
       applyMatching(periodMatching, demandModel);
       remaining -= periodMatching.length;
-      steps.push(Step.log(`Periode ${period}: ${formatMatching(periodMatching)}`));
+      steps.push(Step.log(`Periode ${period}: ${formatMatching(periodMatching, graph)}`));
       timetable.push(periodMatching);
       period += 1;
     }
@@ -231,6 +231,12 @@ const applyMatching = (
   });
 };
 
-const formatMatching = (matching: number[][]) => {
-  return matching.map((edge) => `${edge[0]}-${edge[1]}`).join(", ");
+const formatMatching = (matching: number[][], graph: Graph) => {
+  return matching
+    .map((edge) => {
+      const uLabel = graph.getNode(edge[0])?.label ?? String(edge[0]);
+      const vLabel = graph.getNode(edge[1])?.label ?? String(edge[1]);
+      return `${uLabel}-${vLabel}`;
+    })
+    .join(", ");
 };

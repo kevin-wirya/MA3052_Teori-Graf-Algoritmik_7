@@ -258,6 +258,7 @@ export default function GraphApp() {
         open={timetableOpen}
         onClose={() => setTimetableOpen(false)}
         data={resultData}
+        graph={graphRef.current}
       />
     </div>
   );

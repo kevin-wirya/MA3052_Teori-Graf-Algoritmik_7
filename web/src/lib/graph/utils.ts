@@ -16,6 +16,12 @@ export const formatNodeId = (nodeId: number, graph: Graph) => {
   return node?.label ?? String(nodeId);
 };
 
+export const formatNodeLabel = (nodeId: number, graph: Graph) => {
+  const node = graph.getNode(nodeId);
+  if (!node) return `Node ${nodeId}`;
+  return node.label === String(nodeId) ? `Node ${nodeId}` : node.label;
+};
+
 export const cloneGraph = (source: Graph) => {
   const copy = new Graph(source.directed);
   copy.weighted = source.weighted;

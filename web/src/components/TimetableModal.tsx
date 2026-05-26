@@ -1,12 +1,16 @@
 "use client";
 
+import { Graph } from "@/lib/graph/graph";
+import { formatNodeLabel } from "@/lib/graph/utils";
+
 interface Props {
   open: boolean;
   onClose: () => void;
   data: Record<string, unknown>;
+  graph: Graph;
 }
 
-export default function TimetableModal({ open, onClose, data }: Props) {
+export default function TimetableModal({ open, onClose, data, graph }: Props) {
   const timetable = data.timetable as number[][][] | undefined;
   const periodCount = typeof data.periodCount === "number" ? data.periodCount : 0;
   const classroomLimit = typeof data.classroomLimit === "number" ? data.classroomLimit : 0;
@@ -96,7 +100,7 @@ export default function TimetableModal({ open, onClose, data }: Props) {
               {leftNodes.map((leftId) => (
                 <tr key={leftId} className="hover:bg-panel-soft/50 transition-colors">
                   <td className="border-r-2 border-b border-border bg-panel-soft p-1.5 font-bold font-mono text-ink">
-                    Node {leftId}
+                    {formatNodeLabel(leftId, graph)}
                   </td>
                   {timetable.map((_, periodIdx) => {
                     const matchVal = allocation.get(leftId)?.get(periodIdx);
@@ -109,7 +113,7 @@ export default function TimetableModal({ open, onClose, data }: Props) {
                             : "text-inkMuted/40"
                         }`}
                       >
-                        {matchVal !== undefined ? `➔ Node ${matchVal}` : "-"}
+                        {matchVal !== undefined ? `➔ ${formatNodeLabel(matchVal, graph)}` : "-"}
                       </td>
                     );
                   })}
