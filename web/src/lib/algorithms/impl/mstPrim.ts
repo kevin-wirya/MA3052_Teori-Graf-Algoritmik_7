@@ -11,7 +11,7 @@ export const primMinimumSpanningTreeAlgorithm: GraphAlgorithm = {
     { key: "startNode", label: "Start Node", type: "NODE_SELECT", defaultValue: 0, required: true }
   ],
   execute(graph: Graph, parameters: Record<string, unknown>): AlgorithmResult {
-    const steps = [];
+    const steps: any[] = [];
     const data: Record<string, unknown> = {};
 
     if (graph.nodeCount === 0) {

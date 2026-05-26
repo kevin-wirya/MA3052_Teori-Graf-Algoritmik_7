@@ -17,6 +17,7 @@ import { diameterAlgorithm } from "@/lib/algorithms/impl/diameter";
 import { girthAlgorithm } from "@/lib/algorithms/impl/girth";
 import { bipartiteMaximumMatchingAlgorithm } from "@/lib/algorithms/impl/bipartiteMatching";
 import { timetablingAlgorithm } from "@/lib/algorithms/impl/timetabling";
+import { islandCountAlgorithm } from "@/lib/algorithms/impl/islandCount";
 
 export class AlgorithmRegistry {
   private algorithms: GraphAlgorithm[] = [];
@@ -41,6 +42,7 @@ export class AlgorithmRegistry {
     registry.register(diameterAlgorithm);
     registry.register(cycleDetectionAlgorithm);
     registry.register(girthAlgorithm);
+    registry.register(islandCountAlgorithm);
     return registry;
   }
 

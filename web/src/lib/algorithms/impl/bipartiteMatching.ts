@@ -9,7 +9,7 @@ export const bipartiteMaximumMatchingAlgorithm: GraphAlgorithm = {
     "Mencari matching maksimal pada graf bipartit dengan augmenting path.",
   requiredParameters: [],
   execute(graph: Graph): AlgorithmResult {
-    const steps = [];
+    const steps: any[] = [];
     const data: Record<string, unknown> = {};
 
     if (graph.nodeCount === 0) {

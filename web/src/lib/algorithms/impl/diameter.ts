@@ -8,7 +8,7 @@ export const diameterAlgorithm: GraphAlgorithm = {
     "Menghitung diameter graf (jarak terpanjang antar semua pasangan shortest path).",
   requiredParameters: [],
   execute(graph: Graph): AlgorithmResult {
-    const steps = [];
+    const steps: any[] = [];
     const sortedIds = [...graph.getNodeIds()].sort((a, b) => a - b);
     if (!sortedIds.length) {
       steps.push(Step.log("Graf kosong."));

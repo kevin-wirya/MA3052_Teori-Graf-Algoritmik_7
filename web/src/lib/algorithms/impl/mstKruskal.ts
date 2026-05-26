@@ -9,7 +9,7 @@ export const minimumSpanningTreeAlgorithm: GraphAlgorithm = {
     "Membangun pohon pembangun minimal menggunakan Kruskal. Jika graf tidak terhubung, hasilnya forest.",
   requiredParameters: [],
   execute(graph: Graph): AlgorithmResult {
-    const steps = [];
+    const steps: any[] = [];
     const data: Record<string, unknown> = {};
 
     if (graph.nodeCount === 0) {

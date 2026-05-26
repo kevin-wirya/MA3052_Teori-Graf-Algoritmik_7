@@ -1,5 +1,5 @@
 import { Graph, GraphEdge } from "@/lib/graph/graph";
-import { AlgorithmResult, GraphAlgorithm, Step } from "@/lib/algorithms/types";
+import { AlgorithmResult, GraphAlgorithm, Step, AlgorithmStep } from "@/lib/algorithms/types";
 
 export const bandwidthOptimizationAlgorithm: GraphAlgorithm = {
   name: "Graph Bandwidth (Heuristic)",
@@ -8,7 +8,7 @@ export const bandwidthOptimizationAlgorithm: GraphAlgorithm = {
     "Mengoptimasi penomoran node agar bandwidth graf mengecil menggunakan Cuthill-McKee dan local swap.",
   requiredParameters: [],
   execute(graph: Graph): AlgorithmResult {
-    const steps = [];
+    const steps: AlgorithmStep[] = [];
     const data: Record<string, unknown> = {};
 
     if (graph.nodeCount === 0) {

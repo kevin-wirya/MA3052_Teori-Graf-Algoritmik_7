@@ -12,7 +12,7 @@ export const cycleDetectionAlgorithm: GraphAlgorithm = {
     "Mendeteksi semua siklus dalam graf dan menampilkan siklus yang ditemukan.",
   requiredParameters: [],
   execute(graph: Graph): AlgorithmResult {
-    const steps = [];
+    const steps: any[] = [];
     return graph.directed ? detectDirected(graph, steps) : detectUndirected(graph, steps);
   }
 };

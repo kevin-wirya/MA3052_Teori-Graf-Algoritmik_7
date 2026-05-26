@@ -8,7 +8,7 @@ export const connectedComponentsAlgorithm: GraphAlgorithm = {
     "Menemukan semua komponen terhubung menggunakan DFS dan memberi warna berbeda.",
   requiredParameters: [],
   execute(graph: Graph): AlgorithmResult {
-    const steps = [];
+    const steps: any[] = [];
     const visited = new Set<number>();
     const components: number[][] = [];
     let compId = 0;

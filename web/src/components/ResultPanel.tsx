@@ -9,9 +9,10 @@ interface Props {
   graphRef: React.MutableRefObject<Graph>;
   onGraphUpdate: () => void;
   onBandwidthView: () => void;
+  onTimetableView: () => void;
 }
 
-export default function ResultPanel({ result, resultData, graphRef, onGraphUpdate, onBandwidthView }: Props) {
+export default function ResultPanel({ result, resultData, graphRef, onGraphUpdate, onBandwidthView, onTimetableView }: Props) {
   const summary = result?.summary ?? "Jalankan algoritma untuk melihat hasil.";
 
   const highlightNodes = (nodes: number[], state: NodeStateKey) => {
@@ -52,7 +53,7 @@ export default function ResultPanel({ result, resultData, graphRef, onGraphUpdat
   };
 
   const renderActions = () => {
-    const actions: JSX.Element[] = [];
+    const actions: React.ReactNode[] = [];
     const data = resultData as Record<string, unknown>;
 
     if (data.bipartite && Array.isArray(data.setA) && Array.isArray(data.setB)) {
@@ -113,6 +114,18 @@ export default function ResultPanel({ result, resultData, graphRef, onGraphUpdat
           onClick={onBandwidthView}
         >
           Show bandwidth view
+        </button>
+      );
+    }
+
+    if (Array.isArray(data.timetable)) {
+      actions.push(
+        <button
+          key="timetable"
+          className="rounded-md bg-accent px-2 py-1 text-xs font-semibold text-white"
+          onClick={onTimetableView}
+        >
+          Show timetable matrix
         </button>
       );
     }

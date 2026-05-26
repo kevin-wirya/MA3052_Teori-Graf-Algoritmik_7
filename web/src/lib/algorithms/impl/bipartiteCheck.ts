@@ -8,7 +8,7 @@ export const bipartiteCheckAlgorithm: GraphAlgorithm = {
     "Mengecek apakah graf bipartit menggunakan BFS 2-coloring.",
   requiredParameters: [],
   execute(graph: Graph): AlgorithmResult {
-    const steps = [];
+    const steps: any[] = [];
     const color = new Map<number, number>();
     const setA: number[] = [];
     const setB: number[] = [];

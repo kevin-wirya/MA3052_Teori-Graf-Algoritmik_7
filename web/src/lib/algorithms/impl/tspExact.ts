@@ -14,7 +14,7 @@ export const tspExactAlgorithm: GraphAlgorithm = {
     "Tur TSP optimal global dengan Held-Karp (dynamic programming).",
   requiredParameters: [],
   execute(graph: Graph): AlgorithmResult {
-    const steps = [];
+    const steps: any[] = [];
     const data: Record<string, unknown> = {};
 
     if (graph.nodeCount === 0) {

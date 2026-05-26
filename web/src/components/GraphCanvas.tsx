@@ -192,6 +192,38 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, Props>(function GraphCanvas(
     ctx.textBaseline = "middle";
     ctx.fillText(node.label ?? String(node.id), node.x, node.y + 1);
 
+    // Draw Bandwidth Label Badge if exists
+    if ((node as any).bandwidthLabel !== undefined) {
+      const bwLabel = String((node as any).bandwidthLabel);
+      const badgeRadius = 9;
+      const bx = node.x + nodeRadius * 0.75;
+      const by = node.y - nodeRadius * 0.75;
+
+      // Badge shadow
+      ctx.fillStyle = "rgba(0,0,0,0.15)";
+      ctx.beginPath();
+      ctx.arc(bx + 1, by + 1.5, badgeRadius, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Badge background (sleek green)
+      ctx.fillStyle = "#2e7d32";
+      ctx.beginPath();
+      ctx.arc(bx, by, badgeRadius, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Badge border
+      ctx.strokeStyle = "#ffffff";
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // Badge text
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 9px var(--font-sans)";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(bwLabel, bx, by);
+    }
+
     if (fixedCoordinateMode && node.hasCoordinate) {
       ctx.fillStyle = "#616161";
       ctx.font = "10px var(--font-mono)";
@@ -224,6 +256,82 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, Props>(function GraphCanvas(
     const graph = graphRef.current;
     if (!graph || graph.nodeCount === 0) {
       drawPlaceholder(ctx, width, height);
+      return;
+    }
+
+    const isGrid = (graph as any).isGrid;
+    if (isGrid) {
+      const R = (graph as any).gridRows || 1;
+      const C = (graph as any).gridCols || 1;
+      const margin = 40;
+      const cellWidth = Math.min((width - 2 * margin) / C, (height - 2 * margin) / R);
+      const offsetX = (width - C * cellWidth) / 2;
+      const offsetY = (height - R * cellWidth) / 2;
+
+      ctx.save();
+      ctx.translate(panRef.current.x, panRef.current.y);
+      ctx.scale(zoomRef.current, zoomRef.current);
+
+      for (let r = 0; r < R; r++) {
+        for (let c = 0; c < C; c++) {
+          const id = r * C + c;
+          const node = graph.getNode(id);
+          if (!node) continue;
+
+          const cx = offsetX + c * cellWidth;
+          const cy = offsetY + r * cellWidth;
+          const cw = cellWidth - 3;
+          const ch = cellWidth - 3;
+          const cr = Math.max(3, cellWidth * 0.12);
+
+          let fill = "#f1f5f9";
+          let stroke = "#cbd5e1";
+          let textColor = "#475569";
+
+          const isLand = (node as any).isLand;
+          if (!isLand) {
+            fill = "#e0f2fe";
+            stroke = "#bae6fd";
+            textColor = "#0284c7";
+          } else {
+            if (node.state === "UNVISITED") {
+              fill = "#dcfce7";
+              stroke = "#86efac";
+              textColor = "#15803d";
+            } else if (node.state === "PROCESSING") {
+              fill = "#fef08a";
+              stroke = "#fde047";
+              textColor = "#a16207";
+            } else if (node.state === "VISITED") {
+              fill = "#fed7aa";
+              stroke = "#fdba74";
+              textColor = "#c2410c";
+            } else if (node.state.startsWith("COMPONENT_")) {
+              const style = nodeStateStyles[node.state];
+              fill = style.fill;
+              stroke = style.stroke;
+              textColor = style.stroke;
+            }
+          }
+
+          ctx.fillStyle = fill;
+          ctx.strokeStyle = stroke;
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.roundRect(cx, cy, cw, ch, cr);
+          ctx.fill();
+          ctx.stroke();
+
+          const val = isLand ? "1" : "0";
+          ctx.fillStyle = textColor;
+          ctx.font = `bold ${Math.max(10, cellWidth * 0.35)}px var(--font-sans)`;
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(val, cx + cw / 2, cy + ch / 2);
+        }
+      }
+
+      ctx.restore();
       return;
     }
 
@@ -275,7 +383,10 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, Props>(function GraphCanvas(
       layoutRef.current?.stop();
     },
     resetLayout: () => {
-      if (fixedCoordinateMode) {
+      const graph = graphRef.current;
+      if ((graph as any).isGrid) {
+        fitGridToCanvas();
+      } else if (fixedCoordinateMode) {
         fitCoordinatesToCanvas();
       } else {
         ensureLayout();
@@ -288,6 +399,29 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, Props>(function GraphCanvas(
     },
     draw
   }));
+
+  const fitGridToCanvas = () => {
+    const graph = graphRef.current;
+    if (!graph || graph.nodeCount === 0) return;
+    const R = (graph as any).gridRows || 1;
+    const C = (graph as any).gridCols || 1;
+    const { width, height } = getCanvasSize();
+
+    const margin = 40;
+    const cellWidth = Math.min((width - 2 * margin) / C, (height - 2 * margin) / R);
+    const offsetX = (width - C * cellWidth) / 2;
+    const offsetY = (height - R * cellWidth) / 2;
+
+    graph.getNodes().forEach((node) => {
+      const r = (node as any).gridRow ?? 0;
+      const c = (node as any).gridCol ?? 0;
+      node.x = offsetX + (c + 0.5) * cellWidth;
+      node.y = offsetY + (r + 0.5) * cellWidth;
+      node.pinned = true;
+      node.vx = 0;
+      node.vy = 0;
+    });
+  };
 
   const getCanvasSize = () => {
     const canvas = canvasRef.current;
@@ -350,14 +484,19 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, Props>(function GraphCanvas(
   };
 
   useEffect(() => {
-    ensureLayout();
-    if (fixedCoordinateMode) {
-      fitCoordinatesToCanvas();
+    const graph = graphRef.current;
+    if ((graph as any).isGrid) {
+      layoutRef.current?.stop();
+      fitGridToCanvas();
     } else {
-      const graph = graphRef.current;
-      const shouldLayout = graph.getNodes().every((node) => node.x === 0 && node.y === 0);
-      if (shouldLayout) {
-        layoutRef.current?.circularLayout();
+      ensureLayout();
+      if (fixedCoordinateMode) {
+        fitCoordinatesToCanvas();
+      } else {
+        const shouldLayout = graph.getNodes().every((node) => node.x === 0 && node.y === 0);
+        if (shouldLayout) {
+          layoutRef.current?.circularLayout();
+        }
       }
     }
     draw();
@@ -368,6 +507,16 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, Props>(function GraphCanvas(
     if (!canvas) return;
 
     const handleMouseDown = (event: MouseEvent) => {
+      const graph = graphRef.current;
+      if ((graph as any).isGrid) {
+        panningRef.current = true;
+        lastMouseRef.current = {
+          x: event.clientX - canvas.getBoundingClientRect().left,
+          y: event.clientY - canvas.getBoundingClientRect().top
+        };
+        return;
+      }
+
       const rect = canvas.getBoundingClientRect();
       const mx = toGraphX(event.clientX - rect.left);
       const my = toGraphY(event.clientY - rect.top);

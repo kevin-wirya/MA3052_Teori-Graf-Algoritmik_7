@@ -8,7 +8,7 @@ export const connectivityCheckAlgorithm: GraphAlgorithm = {
     "Memeriksa apakah graf terhubung menggunakan DFS dari node pertama.",
   requiredParameters: [],
   execute(graph: Graph): AlgorithmResult {
-    const steps = [];
+    const steps: any[] = [];
     const visited = new Set<number>();
 
     const nodeIds = graph.getNodeIds();

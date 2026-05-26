@@ -11,7 +11,7 @@ export const timetablingAlgorithm: GraphAlgorithm = {
     { key: "classroomLimit", label: "Max Classes per Period (k)", type: "INTEGER", defaultValue: 2, required: true }
   ],
   execute(graph: Graph, parameters: Record<string, unknown>): AlgorithmResult {
-    const steps = [];
+    const steps: any[] = [];
     const data: Record<string, unknown> = {};
 
     if (graph.nodeCount === 0) {

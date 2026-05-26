@@ -11,7 +11,7 @@ export const dfsAlgorithm: GraphAlgorithm = {
   ],
   execute(graph: Graph, parameters: Record<string, unknown>): AlgorithmResult {
     const startNode = Number(parameters.startNode ?? 0);
-    const steps = [];
+    const steps: any[] = [];
     const visited = new Set<number>();
     const order: number[] = [];
 

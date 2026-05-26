@@ -8,7 +8,7 @@ export const largestComponentAlgorithm: GraphAlgorithm = {
     "Menemukan komponen terhubung terbesar dalam graf menggunakan DFS.",
   requiredParameters: [],
   execute(graph: Graph): AlgorithmResult {
-    const steps = [];
+    const steps: any[] = [];
     const visited = new Set<number>();
     const components: number[][] = [];
     let compId = 0;

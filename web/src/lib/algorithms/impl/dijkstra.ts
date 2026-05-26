@@ -16,7 +16,7 @@ export const dijkstraAlgorithm: GraphAlgorithm = {
   execute(graph: Graph, parameters: Record<string, unknown>): AlgorithmResult {
     const startNode = Number(parameters.startNode ?? 0);
     const endNode = Number(parameters.endNode ?? 0);
-    const steps = [];
+    const steps: any[] = [];
     const data: Record<string, unknown> = {};
 
     if (!graph.getNode(startNode) || !graph.getNode(endNode)) {

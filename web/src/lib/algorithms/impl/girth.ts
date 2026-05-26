@@ -8,7 +8,7 @@ export const girthAlgorithm: GraphAlgorithm = {
     "Menentukan girth graf, yaitu panjang siklus terpendek.",
   requiredParameters: [],
   execute(graph: Graph): AlgorithmResult {
-    const steps = [];
+    const steps: any[] = [];
     const sortedIds = [...graph.getNodeIds()].sort((a, b) => a - b);
     if (!sortedIds.length) {
       steps.push(Step.log("Graf kosong."));

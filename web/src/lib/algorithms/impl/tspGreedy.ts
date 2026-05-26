@@ -12,7 +12,7 @@ export const tspGreedyAlgorithm: GraphAlgorithm = {
     "Mencari pendekatan tur TSP menggunakan greedy nearest neighbor untuk semua start node.",
   requiredParameters: [],
   execute(graph: Graph): AlgorithmResult {
-    const steps = [];
+    const steps: any[] = [];
     const data: Record<string, unknown> = {};
 
     if (graph.nodeCount === 0) {
