@@ -21,6 +21,7 @@ public class AlgorithmRegistry {
         register(new ConnectivityCheckAlgorithm());
         register(new ConnectedComponentsAlgorithm());
         register(new LargestComponentAlgorithm());
+        register(new IslandCountAlgorithm());
         // -- Path Finding --
         register(new PathFinderAlgorithm());
         register(new DijkstraShortestPathAlgorithm());
