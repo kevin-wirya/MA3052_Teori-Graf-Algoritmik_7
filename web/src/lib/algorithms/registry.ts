@@ -6,7 +6,7 @@ import { connectedComponentsAlgorithm } from "@/lib/algorithms/impl/connectedCom
 import { largestComponentAlgorithm } from "@/lib/algorithms/impl/largestComponent";
 import { pathFinderAlgorithm } from "@/lib/algorithms/impl/pathFinder";
 import { dijkstraAlgorithm } from "@/lib/algorithms/impl/dijkstra";
-import { tspGreedyAlgorithm } from "@/lib/algorithms/impl/tspGreedy";
+import { tspGreedyAlgorithm } from "@/lib/algorithms/impl/tspGreedy";   
 import { tspExactAlgorithm } from "@/lib/algorithms/impl/tspExact";
 import { bandwidthOptimizationAlgorithm } from "@/lib/algorithms/impl/bandwidth";
 import { minimumSpanningTreeAlgorithm } from "@/lib/algorithms/impl/mstKruskal";

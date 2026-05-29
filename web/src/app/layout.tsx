@@ -1,22 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { IBM_Plex_Mono, Space_Grotesk } from "next/font/google";
-
-const sans = Space_Grotesk({
-  subsets: ["latin"],
-  variable: "--font-sans",
-  display: "swap"
-});
-
-const mono = IBM_Plex_Mono({
-  subsets: ["latin"],
-  weight: ["400", "600"],
-  variable: "--font-mono",
-  display: "swap"
-});
 
 export const metadata: Metadata = {
-  title: "Proyek AKhir MA3052 Teori Graf Algoritmik - 7",
+  title: "Proyek Akhir MA3052 Teori Graf Algoritmik - 7",
   description: "Graph algorithm visualizer in the browser",
   icons: {
     icon: "/logo.png"
@@ -29,7 +15,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${sans.variable} ${mono.variable}`}>
+    <html lang="en">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet" />
+      </head>
       <body>{children}</body>
     </html>
   );

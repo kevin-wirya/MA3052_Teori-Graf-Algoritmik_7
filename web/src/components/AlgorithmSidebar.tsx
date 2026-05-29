@@ -30,6 +30,7 @@ export default function AlgorithmSidebar({ registry, selected, onSelect, isOpen,
     Object.fromEntries(categories.map((category) => [category, true]))
   );
   const [searchQuery, setSearchQuery] = useState("");
+  const [infoAlgo, setInfoAlgo] = useState<GraphAlgorithm | null>(null);
 
   const toggleCategory = (category: string) => {
     setOpenCategories((prev) => ({
@@ -139,21 +140,37 @@ export default function AlgorithmSidebar({ registry, selected, onSelect, isOpen,
                     <span className="text-[9px]">{isOpenCat ? "▼" : "▶"}</span>
                   </button>
                   {isOpenCat && (
-                    <div className="mt-1 flex flex-col gap-0.5 pl-2">
+                    <div className="mt-1 flex flex-col gap-1 pl-2">
                       {algos.map((algo) => {
                         const active = selected?.name === algo.name;
                         return (
-                          <button
+                          <div
                             key={algo.name}
-                            className={`rounded-lg px-2.5 py-1.5 text-left text-xs transition duration-200 ${
+                            className={`flex items-center justify-between rounded-lg px-2.5 py-0.5 transition duration-200 group/item ${
                               active
                                 ? "bg-accent/10 text-accent font-semibold border-l-2 border-accent"
                                 : "bg-transparent text-ink hover:bg-panel-soft"
                             }`}
-                            onClick={() => onSelect(algo)}
                           >
-                            {algo.name}
-                          </button>
+                            <button
+                              type="button"
+                              className="flex-1 text-left text-xs py-1.5 select-none focus:outline-none"
+                              onClick={() => onSelect(algo)}
+                            >
+                              {algo.name}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setInfoAlgo(algo);
+                              }}
+                              className="opacity-45 hover:opacity-100 hover:scale-110 p-1 text-[10px] shrink-0 transition-all cursor-pointer select-none focus:outline-none"
+                              title={`Info ${algo.name}`}
+                            >
+                              ℹ️
+                            </button>
+                          </div>
                         );
                       })}
                     </div>
@@ -191,6 +208,43 @@ export default function AlgorithmSidebar({ registry, selected, onSelect, isOpen,
           </div>
         )}
       </div>
+
+      {/* Info Modal Dialog */}
+      {infoAlgo && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-fade-in">
+          <div className="bg-panel border border-border shadow-panel rounded-3xl p-6 max-w-md w-full relative animate-scale-up space-y-4">
+            <div className="flex items-start justify-between">
+              <div>
+                <span className="text-[9px] font-bold text-accent uppercase tracking-wider bg-accent/10 px-2.5 py-1 rounded-full">
+                  Kategori: {infoAlgo.category}
+                </span>
+                <h3 className="text-base font-bold text-ink mt-2">{infoAlgo.name}</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setInfoAlgo(null)}
+                className="text-inkMuted hover:text-ink text-sm p-1 rounded-lg hover:bg-panel-soft transition focus:outline-none"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <div className="text-xs text-inkMuted leading-relaxed bg-panel-soft p-4 rounded-2xl border border-border/40 whitespace-pre-wrap">
+              {infoAlgo.description || "Tidak ada penjelasan tertulis untuk algoritma ini."}
+            </div>
+
+            <div className="flex justify-end pt-1">
+              <button
+                type="button"
+                onClick={() => setInfoAlgo(null)}
+                className="px-4 py-2 bg-accent text-white text-xs font-bold rounded-xl shadow-sm hover:bg-accent-hover transition-colors focus:outline-none"
+              >
+                Tutup
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
